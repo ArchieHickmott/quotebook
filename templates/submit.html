@@ -1,0 +1,16 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% from "home.html" import render_table%}
+{% extends "template.html" %}
+{% block content %}
+<p>
+    please censor stuff so we don't get flagged by IT thanks!
+</p>
+<form method="POST" id="form">
+{{form.crsf_token}}
+{{wtf.quick_form(form, button_map = {"submit": "secondary"})}}
+</form>
+<br>
+<div class="row">
+{{render_table(quotes, "table-striped", ["name", "year", "quote"])}}
+</div>
+{% endblock content %}
