@@ -1,0 +1,7 @@
+a.nav-link:hover {
+    text-decoration: underline;
+}
+
+tr.user-table-row:hover {
+    text-decoration: underline;
+}   

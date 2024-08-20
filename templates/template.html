@@ -11,6 +11,7 @@
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{url_for('static', filename='/style/main.css')}}">
         <link rel="stylesheet" href="">
         {% block head %}
         
@@ -25,9 +26,19 @@
     <nav class="navbar navbar-expand-sm">
     <div class="container-fluid">
     <ul class="navbar-nav">
+        {% if "user" in session %}
         <li class="nav-item"><a class="nav-link" href="{{url_for('home')}}">home</a></li>
+        {% else %}
+        <li class="nav-item"><a class="nav-link" href="{{url_for('index')}}">home</a></li>
+        {% endif %}
         <li class="nav-item"><a class="nav-link" href="{{url_for('quotes')}}">all quotes</a></li>
         <li class="nav-item"><a class="nav-link" href="{{url_for('submit')}}">submit a quote</a></li>
+        {% if "user" not in session %}
+        <li class="nav-item justify-content-end"><a class="nav-link" href="{{url_for('login')}}">login</a></li>
+        <li class="nav-item justify-content-end"><a class="nav-link" href="{{url_for('register')}}">register</a></li>
+        {% else %}
+        <li class="nav-item justify-content-end"><a class="nav-link" href="{{url_for('logout')}}">logout</a></li>
+        {% endif %}
     </ul>
     </div>
     </header>

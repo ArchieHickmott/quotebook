@@ -1,21 +1,8 @@
 {% extends "template.html" %}
-{% macro render_table(table, table_type="", headers=[]) %}
-<table class="table {{table_type}}">
-{% if headers != [] %}
-    {% for header in headers %}
-        <th>{{header}}</th>
-    {% endfor %}
-{% endif%}
-{% for row in table%}
-<tr>
-    {% for data in row %}
-    <td>{{data}}</td>
-    {% endfor %}
-</tr>
-{% endfor %}
-</table>
-{% endmacro %}
+{% from "_render_table.html" import render_table %}
 {% block content %}
 <h2>Quotes:</h2>
 {{render_table(quotes, "table-striped", ["name", "year", "quote"])}}
 {% endblock content %}
+{% block body %}
+{% endblock body %}
