@@ -3,6 +3,7 @@ from traceback import format_exc, print_exc
 from datetime import datetime
 import datetime as dt
 from random import randint
+import json
 
 # lib
 from flask import render_template, redirect, url_for, request, session
@@ -39,6 +40,16 @@ class QuoteForm(FlaskForm):
     quote = StringField("Quote")
     submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
 
+def like_quote(quoteid, userid):
+    quotes: Table = db.quotes
+    likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
+    likes = json.loads(likes)
+    assert isinstance(likes, list)
+    if userid in likes:
+        return
+    likes.append(userid)
+    db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
+    
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
     form: QuoteForm = QuoteForm()
