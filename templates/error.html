@@ -1,0 +1,8 @@
+{% extends "template.html" %}
+{% block content %}
+{{msg}}<br>
+<br>
+{% for key, item in error.items()%}
+    {{item | safe}} <br><b>
+{% endfor %}
+{% endblock content %}
