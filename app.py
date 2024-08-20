@@ -22,6 +22,7 @@ from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete
 from app_errors import AuthError, AppError
 
 app = Flask(__name__)
+app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(app)
 app.config["SECRET_KEY"] = "attendance is the biggest indicator for success"
 db = Database("quote.db")
@@ -45,10 +46,11 @@ def like_quote(quoteid, userid):
     likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
     likes = json.loads(likes)
     assert isinstance(likes, list)
-    if userid in likes:
+    if int(userid) in likes:
         return
-    likes.append(userid)
+    likes.append(int(userid))
     db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
+    db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")
     
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
@@ -64,26 +66,29 @@ def submit():
             form.quote.errors.append(ValueError("too long"))
         else:
             quotes.append(name=name, year=date, quote=quote)
-    quotes = quotes()
+    quotes = quotes("name", "year", "quote")
     return render_template("submit.html", form=form, quotes=quotes)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
+    if request.method == "POST" and "user" in session:
+        user = User.load(**session["user"])
+        like_quote(request.form["id"], user.id())
     while True:
         id = randint(1, num)
         try:
-            quote = db.query(f"SELECT * FROM quotes WHERE rowid = {id}")[0]
+            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
         except IndexError:
             pass
         else:
             break
-    return render_template("quote.html", quote=quote)
+    return render_template("quote.html", quote=quote, quoteid=id)
 
 @app.route("/quotes")
 def quotes():
     quotes: Table = db.quotes
-    quotes = quotes()
+    quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
     return render_template("home.html", quotes=quotes)
 
 # MARK: Login Page
@@ -138,13 +143,16 @@ def register():
 
 # MARK: Home Page
 # home page (logged in users only)
-@app.route('/home')
+@app.route('/home', methods=["GET", "POST"])
 def home():
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
+    if request.method == "POST" and "user" in session:
+        user = User.load(**session["user"])
+        like_quote(request.form["id"], user.id())
     while True:
         id = randint(1, num)
         try:
-            quote = db.query(f"SELECT * FROM quotes WHERE rowid = {id}")[0]
+            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
         except IndexError:
             pass
         else:
@@ -154,7 +162,7 @@ def home():
     user = User.load(**session["user"])
     if not user.is_logged_in():
         return redirect(url_for("login"))
-    return render_template("userpage.html", user=user, quote=quote)
+    return render_template("userpage.html", user=user, quote=quote, quoteid=id)
 
 # MARK: logout/delete
 @app.route("/logout")
