@@ -47,8 +47,16 @@ class User:
     def __vars__(self):
         self.db = None
         self.crypt = None
-        return self.__dict__      
+        return self.__dict__   
     
+    def has_liked(self, quoteid) -> bool:
+        return self.user_has_liked(self.__id, quoteid)
+    
+    def user_has_liked(self, userid, quoteid) -> bool:
+        if self.db.likes.get().filter(quoteid=int(quoteid), userid=int(userid)).all():
+            return True
+        return False    
+   
     def create_user(db: Database, first_name: str, last_name: str, email: str, password: str):
         users: Table = db.users
         passwords: Table = db.passwords
