@@ -143,7 +143,7 @@ def index():
         else:
             break
     best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
-    return render_template("quote.html", quote=quote, quoteid=id, best_quote=best_quote)
+    return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote)
 
 @app.route("/quotes", methods=["GET", "POST"])
 def quotes():
@@ -156,7 +156,7 @@ def quotes():
     quotes: Table = db.quotes
     if not "user" in session:
         quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
-        return render_template("home.html", quotes=quotes)
+        return render_template("quotes.html", quotes=quotes)
     quotes_ls = db.query("""SELECT name, year, quote, numlikes, rowid FROM quotes
                       ORDER BY numlikes DESC""") 
     displayed_quotes = []
@@ -165,7 +165,7 @@ def quotes():
         likes = json.loads(likes)
         displayed_quotes.append((*quote, likes))
     user = User.load(**session["user"])
-    return render_template("home.html", quotes=displayed_quotes, id=int(user.id()))
+    return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()))
     
 # MARK: Login Page
 @app.route('/login', methods=['GET', 'POST'])
@@ -251,7 +251,7 @@ def home():
     b_likes = json.loads(b_likes)
     best_quote = (*best_quote, b_likes)
     bid = best_quote[3]
-    return render_template("userpage.html", user=user, id=int(user.id()),
+    return render_template("home.html", user=user, id=int(user.id()),
                            quote=quote, quoteid=id, 
                            best_quote=best_quote, best_quote_id=bid)
 
