@@ -7,26 +7,29 @@ import json
 
 # lib
 from flask import render_template, redirect, url_for, request, session
-from jinja2 import Environment
 from fortifysql import Database, Table
 from flask import Flask, render_template, request, abort, Response
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
 from flask_bcrypt import Bcrypt
+from werkzeug.exceptions import HTTPException
 from wtforms import StringField, DateField, SubmitField, HiddenField
 from wtforms.validators import InputRequired
 
 # local
 from users import User
 from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete
-from app_errors import AuthError, AppError
+from app_errors import AuthError, AppError, error_codes
 
 app = Flask(__name__)
 app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(app)
 app.config["SECRET_KEY"] = "attendance is the biggest indicator for success"
 db = Database("quote.db")
-def log(request):
+def log(request: str):
+    if request.strip() == "COMMIT" or request.strip() == "BEGIN":
+        return
+    request = request.replace("\n", "").strip().replace("   ", "")
     app.logger.info(f"[Database] {request}")
 db.query_logging(True, log)
 db.backup("C:/Users/25hickmar/OneDrive - St Patricks College/Digital Solutions/small projects/quotebook")
@@ -83,7 +86,8 @@ def index():
             pass
         else:
             break
-    return render_template("quote.html", quote=quote, quoteid=id)
+    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    return render_template("quote.html", quote=quote, quoteid=id, best_quote=best_quote)
 
 @app.route("/quotes")
 def quotes():
@@ -162,7 +166,8 @@ def home():
     user = User.load(**session["user"])
     if not user.is_logged_in():
         return redirect(url_for("login"))
-    return render_template("userpage.html", user=user, quote=quote, quoteid=id)
+    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    return render_template("userpage.html", user=user, quote=quote, quoteid=id, best_quote=best_quote)
 
 # MARK: logout/delete
 @app.route("/logout")
@@ -218,8 +223,7 @@ def admin():
                                 date_created=users.get(users.date_created).filter(userid=id).first()[0],
                                 plevel=users.get(users.PLEVEL).filter(userid=id).first()[0],
                                 logins=db.log_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                changes=db.log_detail_changes.get("detail_changed", "ip", "time").filter(userid=id).order("time DESC").all())
+                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all())
     if not user.is_logged_in():
         return redirect(url_for("login")) 
     if permission_level != 0:
@@ -229,6 +233,7 @@ def admin():
                             LIMIT 5""")
         logins = db.query(f"""SELECT fails.userid, users.email, fails.ip, fails.time
                             FROM log_logins as fails, users WHERE fails.userid = users.userid
+                            ORDER BY time DESC
                             LIMIT 5""")
         return render_template('admin.html', 
                                 user=user, 
@@ -238,5 +243,15 @@ def admin():
                                 plevel = permission_level)
     return "NOT ADMIN", 401
 
-if __name__ == '__main__':
+@app.errorhandler(Exception)
+def errors(e: Exception):
+    if isinstance(e, HTTPException):
+        if e.code == 404:
+            return render_template("404.html", msg=error_codes[e.code])
+        else:
+            app.logger.warning(f"error in app {e.code}")
+    tb = format_exc()  # Capture traceback 
+    app.logger.error(f"Exception in app {e}", extra={"error": str(e),"traceback":tb})
+
+if __name__ == '__main__':  
     app.run(host="0.0.0.0", debug=True)
