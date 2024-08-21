@@ -83,7 +83,7 @@ User.crypt = crypt
 class QuoteForm(FlaskForm):
     name = StringField("Name", [InputRequired()])
     date = StringField("Date")
-    quote = StringField("Quote")
+    quote = StringField("Quote", [InputRequired()])
     submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
 
 def like_quote(quoteid, userid):
@@ -97,6 +97,16 @@ def like_quote(quoteid, userid):
     db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
     db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")
     
+def unlike_quote(quoteid, userid):
+    quotes: Table = db.quotes
+    likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
+    likes = json.loads(likes)
+    assert isinstance(likes, list)
+    if int(userid) in likes:
+        likes.remove(int(userid))
+        db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
+        db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")    
+    
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
     form: QuoteForm = QuoteForm()
@@ -104,9 +114,13 @@ def submit():
     if form.validate_on_submit():
         name = form.name.data
         date = form.date.data
+        form.date.data = ""
+        form.name.data = ""
+
         if not date:
             date = "2024"
         quote = form.quote.data
+        form.quote.data = ""
         if len(quote) > 300 or len(name) > 300 or len(date) > 300:
             form.quote.errors.append(ValueError("too long"))
         else:
@@ -131,12 +145,28 @@ def index():
     best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
     return render_template("quote.html", quote=quote, quoteid=id, best_quote=best_quote)
 
-@app.route("/quotes")
+@app.route("/quotes", methods=["GET", "POST"])
 def quotes():
+    if request.method == "POST" and "user" in session:
+        user = User.load(**session["user"])
+        if "like" in request.form:
+            like_quote(request.form["like"], user.id())
+        elif "unlike" in request.form:
+            unlike_quote(request.form["unlike"], user.id())
     quotes: Table = db.quotes
-    quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
-    return render_template("home.html", quotes=quotes)
-
+    if not "user" in session:
+        quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
+        return render_template("home.html", quotes=quotes)
+    quotes_ls = db.query("""SELECT name, year, quote, numlikes, rowid FROM quotes
+                      ORDER BY numlikes DESC""") 
+    displayed_quotes = []
+    for quote in quotes_ls:
+        likes = quotes.get("likes").filter(f"rowid={quote[4]}").first()[0]
+        likes = json.loads(likes)
+        displayed_quotes.append((*quote, likes))
+    user = User.load(**session["user"])
+    return render_template("home.html", quotes=displayed_quotes, id=int(user.id()))
+    
 # MARK: Login Page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -191,14 +221,21 @@ def register():
 # home page (logged in users only)
 @app.route('/home', methods=["GET", "POST"])
 def home():
+    quotes: Table = db.quotes
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
     if request.method == "POST" and "user" in session:
         user = User.load(**session["user"])
-        like_quote(request.form["id"], user.id())
+        if "like" in request.form:
+            like_quote(request.form["like"], user.id())
+        elif "unlike" in request.form:
+            unlike_quote(request.form["unlike"], user.id())
     while True:
         id = randint(1, num)
         try:
             quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
+            likes = quotes.get("likes").filter(f"rowid={id}").first()[0]
+            likes = json.loads(likes)
+            quote = (*quote, likes)
         except IndexError:
             pass
         else:
@@ -208,8 +245,15 @@ def home():
     user = User.load(**session["user"])
     if not user.is_logged_in():
         return redirect(url_for("login"))
-    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
-    return render_template("userpage.html", user=user, quote=quote, quoteid=id, best_quote=best_quote)
+    best_quote = db.query("SELECT name, year, quote, rowid FROM quotes ORDER BY numlikes DESC LIMIT 1")[0]
+    print(best_quote)
+    b_likes = quotes.get("likes").filter(f"rowid={best_quote[3]}").first()[0]
+    b_likes = json.loads(b_likes)
+    best_quote = (*best_quote, b_likes)
+    bid = best_quote[3]
+    return render_template("userpage.html", user=user, id=int(user.id()),
+                           quote=quote, quoteid=id, 
+                           best_quote=best_quote, best_quote_id=bid)
 
 # MARK: logout/delete
 @app.route("/logout")
@@ -294,6 +338,7 @@ def errors(e: Exception):
             app.logger.warning(f"error in app {e.code}")
     tb = format_exc()  # Capture traceback 
     app.logger.error(f"Exception in app {e}", extra={"error": str(e),"traceback":tb})
+    raise e
 
 if __name__ == '__main__':  
     app.run(host="0.0.0.0", debug=True)
