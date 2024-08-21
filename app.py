@@ -32,7 +32,16 @@ else:
     with open("quote.db", "w") as file:
         pass
     db = Database("quote.db")
-    db.multi_query("""
+     db.multi_query("""
+CREATE TABLE users (
+    userid       TEXT    PRIMARY KEY,
+    first_name   TEXT    NOT NULL,
+    last_name    TEXT,
+    email        TEXT    NOT NULL
+                         UNIQUE,
+    date_created TEXT,
+    PLEVEL       INTEGER DEFAULT (0) 
+);
 CREATE TABLE log_failed_logins (
     userid        TEXT REFERENCES users (userid),
     ip            TEXT,
@@ -57,15 +66,8 @@ CREATE TABLE quotes (
     likes    TEXT    DEFAULT "[]",
     numlikes INTEGER DEFAULT (0) 
 );
-CREATE TABLE users (
-    userid       TEXT    PRIMARY KEY,
-    first_name   TEXT    NOT NULL,
-    last_name    TEXT,
-    email        TEXT    NOT NULL
-                         UNIQUE,
-    date_created TEXT,
-    PLEVEL       INTEGER DEFAULT (0) 
-);""")
+""")
+    db.reload_tables()
 def log(request: str):
     if request.strip() == "COMMIT" or request.strip() == "BEGIN":
         return
