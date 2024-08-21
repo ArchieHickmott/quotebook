@@ -3,6 +3,7 @@ from traceback import format_exc, print_exc
 from datetime import datetime
 import datetime as dt
 from random import randint
+import json
 import os
 
 # lib
@@ -12,15 +13,17 @@ from flask import Flask, render_template, request, abort, Response
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
 from flask_bcrypt import Bcrypt
+from werkzeug.exceptions import HTTPException
 from wtforms import StringField, DateField, SubmitField, HiddenField
 from wtforms.validators import InputRequired
 
 # local
 from users import User
 from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete
-from app_errors import AuthError, AppError
+from app_errors import AuthError, AppError, error_codes
 
 app = Flask(__name__)
+app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(app)
 app.config["SECRET_KEY"] = "attendance is the biggest indicator for success"
 if os.path.isfile("quote.db"):
@@ -63,7 +66,10 @@ CREATE TABLE users (
     date_created TEXT,
     PLEVEL       INTEGER DEFAULT (0) 
 );""")
-def log(request):
+def log(request: str):
+    if request.strip() == "COMMIT" or request.strip() == "BEGIN":
+        return
+    request = request.replace("\n", "").strip().replace("   ", "")
     app.logger.info(f"[Database] {request}")
 db.query_logging(True, log)
 db.backup("C:/Users/25hickmar/OneDrive - St Patricks College/Digital Solutions/small projects/quotebook")
@@ -78,6 +84,17 @@ class QuoteForm(FlaskForm):
     quote = StringField("Quote")
     submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
 
+def like_quote(quoteid, userid):
+    quotes: Table = db.quotes
+    likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
+    likes = json.loads(likes)
+    assert isinstance(likes, list)
+    if int(userid) in likes:
+        return
+    likes.append(int(userid))
+    db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
+    db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")
+    
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
     form: QuoteForm = QuoteForm()
@@ -92,26 +109,30 @@ def submit():
             form.quote.errors.append(ValueError("too long"))
         else:
             quotes.append(name=name, year=date, quote=quote)
-    quotes = quotes()
+    quotes = quotes("name", "year", "quote")
     return render_template("submit.html", form=form, quotes=quotes)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
+    if request.method == "POST" and "user" in session:
+        user = User.load(**session["user"])
+        like_quote(request.form["id"], user.id())
     while True:
         id = randint(1, num)
         try:
-            quote = db.query(f"SELECT * FROM quotes WHERE rowid = {id}")[0]
+            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
         except IndexError:
             pass
         else:
             break
-    return render_template("quote.html", quote=quote)
+    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    return render_template("quote.html", quote=quote, quoteid=id, best_quote=best_quote)
 
 @app.route("/quotes")
 def quotes():
     quotes: Table = db.quotes
-    quotes = quotes()
+    quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
     return render_template("home.html", quotes=quotes)
 
 # MARK: Login Page
@@ -166,13 +187,16 @@ def register():
 
 # MARK: Home Page
 # home page (logged in users only)
-@app.route('/home')
+@app.route('/home', methods=["GET", "POST"])
 def home():
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
+    if request.method == "POST" and "user" in session:
+        user = User.load(**session["user"])
+        like_quote(request.form["id"], user.id())
     while True:
         id = randint(1, num)
         try:
-            quote = db.query(f"SELECT * FROM quotes WHERE rowid = {id}")[0]
+            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
         except IndexError:
             pass
         else:
@@ -182,7 +206,8 @@ def home():
     user = User.load(**session["user"])
     if not user.is_logged_in():
         return redirect(url_for("login"))
-    return render_template("userpage.html", user=user, quote=quote)
+    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    return render_template("userpage.html", user=user, quote=quote, quoteid=id, best_quote=best_quote)
 
 # MARK: logout/delete
 @app.route("/logout")
@@ -238,8 +263,7 @@ def admin():
                                 date_created=users.get(users.date_created).filter(userid=id).first()[0],
                                 plevel=users.get(users.PLEVEL).filter(userid=id).first()[0],
                                 logins=db.log_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                changes=db.log_detail_changes.get("detail_changed", "ip", "time").filter(userid=id).order("time DESC").all())
+                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all())
     if not user.is_logged_in():
         return redirect(url_for("login")) 
     if permission_level != 0:
@@ -249,6 +273,7 @@ def admin():
                             LIMIT 5""")
         logins = db.query(f"""SELECT fails.userid, users.email, fails.ip, fails.time
                             FROM log_logins as fails, users WHERE fails.userid = users.userid
+                            ORDER BY time DESC
                             LIMIT 5""")
         return render_template('admin.html', 
                                 user=user, 
@@ -258,5 +283,15 @@ def admin():
                                 plevel = permission_level)
     return "NOT ADMIN", 401
 
-if __name__ == '__main__':
+@app.errorhandler(Exception)
+def errors(e: Exception):
+    if isinstance(e, HTTPException):
+        if e.code == 404:
+            return render_template("404.html", msg=error_codes[e.code])
+        else:
+            app.logger.warning(f"error in app {e.code}")
+    tb = format_exc()  # Capture traceback 
+    app.logger.error(f"Exception in app {e}", extra={"error": str(e),"traceback":tb})
+
+if __name__ == '__main__':  
     app.run(host="0.0.0.0", debug=True)

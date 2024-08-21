@@ -2,7 +2,7 @@
 {% from "_render_table.html" import render_table %}
 {% block content %}
 <h2>Quotes:</h2>
-{{render_table(quotes, "table-striped", ["name", "year", "quote"])}}
+{{render_table(quotes, "table-striped", ["name", "year", "quote", "number of likes"])}}
 {% endblock content %}
 {% block body %}
 {% endblock body %}
