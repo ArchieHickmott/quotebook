@@ -86,6 +86,10 @@ class QuoteForm(FlaskForm):
     quote = StringField("Quote", [InputRequired()])
     submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
 
+class SearchForm(FlaskForm):
+    search = StringField("search", [InputRequired()])
+    submit = SubmitField("search", render_kw={"class": "button button-dark"})
+
 def like_quote(quoteid, userid):
     quotes: Table = db.quotes
     likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
@@ -106,7 +110,55 @@ def unlike_quote(quoteid, userid):
         likes.remove(int(userid))
         db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
         db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")    
+ 
+@app.before_request
+def before():
+    form: SearchForm = SearchForm()
+    quotes: Table = db.quotes
+    if "like" in request.form and "user" in session:
+        user = User.load(**session["user"])
+        like_quote(request.form["like"], user.id())
+    elif "unlike" in request.form and "user" in session:
+        user = User.load(**session["user"])
+        unlike_quote(request.form["unlike"], user.id())
+    if not form.validate_on_submit():
+        return
+    if not "user" in session:
+        search = form.search.data
+        sql = """
+                SELECT name, year, quote, numlikes FROM quotes 
+                WHERE name LIKE ?
+                OR year LIKE ?
+                OR quote LIKE ?
+            """
+        results = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
+        return render_template("quotes.html", quotes=results, search_form=form)
+    search = form.search.data
+    sql = """
+            SELECT name, year, quote, numlikes, rowid FROM quotes 
+            WHERE name LIKE ?
+            OR year LIKE ?
+            OR quote LIKE ?
+            ORDER BY numlikes DESC
+            """
+    quotes_ls = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
+    displayed_quotes = []
+    for quote in quotes_ls:
+        likes = quotes.get("likes").filter(f"rowid={quote[4]}").first()[0]
+        likes = json.loads(likes)
+        displayed_quotes.append((*quote, likes))
+    user = User.load(**session["user"])
     
+    search = form.search.data
+    sql = """
+            SELECT name, year, quote, numlikes FROM quotes 
+            WHERE name LIKE ?
+            OR year LIKE ?
+            OR quote LIKE ?
+            """
+    results = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
+    return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()), search_form=SearchForm())
+ 
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
     form: QuoteForm = QuoteForm()
@@ -126,7 +178,7 @@ def submit():
         else:
             quotes.append(name=name, year=date, quote=quote)
     quotes = quotes("name", "year", "quote")
-    return render_template("submit.html", form=form, quotes=quotes)
+    return render_template("submit.html", form=form, quotes=quotes, search_form=SearchForm())
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -143,20 +195,14 @@ def index():
         else:
             break
     best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
-    return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote)
+    return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote, search_form=SearchForm())
 
 @app.route("/quotes", methods=["GET", "POST"])
 def quotes():
-    if request.method == "POST" and "user" in session:
-        user = User.load(**session["user"])
-        if "like" in request.form:
-            like_quote(request.form["like"], user.id())
-        elif "unlike" in request.form:
-            unlike_quote(request.form["unlike"], user.id())
     quotes: Table = db.quotes
     if not "user" in session:
         quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
-        return render_template("quotes.html", quotes=quotes)
+        return render_template("quotes.html", quotes=quotes, search_form=SearchForm())
     quotes_ls = db.query("""SELECT name, year, quote, numlikes, rowid FROM quotes
                       ORDER BY numlikes DESC""") 
     displayed_quotes = []
@@ -165,7 +211,7 @@ def quotes():
         likes = json.loads(likes)
         displayed_quotes.append((*quote, likes))
     user = User.load(**session["user"])
-    return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()))
+    return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()), search_form=SearchForm())
     
 # MARK: Login Page
 @app.route('/login', methods=['GET', 'POST'])
@@ -195,7 +241,7 @@ def login():
             db.log_logins.append(userid=id, ip=request.remote_addr, time=datetime.now())
             session["user"] = vars(user)
             return redirect(url_for('home'))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, search_form=SearchForm())
 
 # MARK: Register Page
 @app.route('/register', methods=['GET', 'POST'])
@@ -215,7 +261,7 @@ def register():
         
         User.create_user(db, first_name, last_name, email, password)
         return redirect(url_for("login"))
-    return render_template("register.html", form=form)
+    return render_template("register.html", form=form, search_form=SearchForm())
 
 # MARK: Home Page
 # home page (logged in users only)
@@ -223,12 +269,6 @@ def register():
 def home():
     quotes: Table = db.quotes
     num = db.query("SELECT max(rowid) FROM quotes")[0][0]
-    if request.method == "POST" and "user" in session:
-        user = User.load(**session["user"])
-        if "like" in request.form:
-            like_quote(request.form["like"], user.id())
-        elif "unlike" in request.form:
-            unlike_quote(request.form["unlike"], user.id())
     while True:
         id = randint(1, num)
         try:
@@ -253,7 +293,7 @@ def home():
     bid = best_quote[3]
     return render_template("home.html", user=user, id=int(user.id()),
                            quote=quote, quoteid=id, 
-                           best_quote=best_quote, best_quote_id=bid)
+                           best_quote=best_quote, best_quote_id=bid, search_form=SearchForm())
 
 # MARK: logout/delete
 @app.route("/logout")
@@ -271,7 +311,7 @@ def delete_account():
     if not user.is_logged_in():
         return redirect(url_for("index"))
     if not form.validate_on_submit():
-        return render_template("confirm_delete.html", form=form)
+        return render_template("confirm_delete.html", form=form, search_form=SearchForm())
     id = user.id()
     session.pop("user")
     db.log_detail_changes.remove(userid=id)
@@ -309,7 +349,8 @@ def admin():
                                 date_created=users.get(users.date_created).filter(userid=id).first()[0],
                                 plevel=users.get(users.PLEVEL).filter(userid=id).first()[0],
                                 logins=db.log_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all())
+                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
+                                search_form=SearchForm())
     if not user.is_logged_in():
         return redirect(url_for("login")) 
     if permission_level != 0:
@@ -326,14 +367,15 @@ def admin():
                                 users=users_table, 
                                 fails=fails, 
                                 logins=logins,
-                                plevel = permission_level)
+                                plevel = permission_level, 
+                                search_form=SearchForm())
     return "NOT ADMIN", 401
 
 @app.errorhandler(Exception)
 def errors(e: Exception):
     if isinstance(e, HTTPException):
         if e.code == 404:
-            return render_template("404.html", msg=error_codes[e.code])
+            return render_template("404.html", msg=error_codes[e.code], search_form=SearchForm())
         else:
             app.logger.warning(f"error in app {e.code}")
     tb = format_exc()  # Capture traceback 

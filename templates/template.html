@@ -39,6 +39,11 @@
         {% else %}
         <li class="nav-item justify-content-end"><a class="nav-link" href="{{url_for('logout')}}">logout</a></li>
         {% endif %}
+        <form class="nav-item" method="POST">
+            {{search_form.csrf_token}}
+            {{search_form.search}}
+            {{search_form.submit}}
+        </form>
     </ul>
     </div>
     </header>
