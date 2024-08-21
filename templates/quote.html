@@ -1,23 +1,42 @@
 {% extends "template.html" %}
 {% block content %}
 <div class="row" style="font-size: larger;">
-<div class="col-sm-6">
-<div class="row">
-<div class="col-sm-12">
-"{{quote[2]}}"
-</div>
-</div>
-<div class="row">
-<div class="col-sm-1"></div>
-<div class="col-sm-11"><b> - {{quote[0]}}, {{quote[1]}}</b></div>
-{% if "user" in session %}
-    <form method="POST">
-        <input type="hidden" name="id" value="{{quoteid}}">
-        <input type="submit" value="like">
-    </form>
-{% endif %}
-</div>
-</div>
-<div class="col-sm-6"></div>
+    <div class="col-sm-6">
+    <h4>Random Quote</h4>
+        <div class="row">
+            <div class="col-sm-12">
+            "{{quote[2]}}"
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-11"><b> - {{quote[0]}}, {{quote[1]}}</b>
+            {% if "user" in session %}
+                <form method="POST" class="font-size: small">
+                    <input type="hidden" name="id" value="{{quoteid}}">
+                    <input type="submit" value="like">
+                </form>
+            {% endif %}
+            </div>
+        </div><br>
+    <h4>Best Quote</h4>
+        <div class="row">
+            <div class="col-sm-12">
+            "{{best_quote[2]}}"
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-11"><b> - {{best_quote[0]}}, {{best_quote[1]}}</b>
+            {% if "user" in session %}
+                <form method="POST" class="font-size: small">
+                    <input type="hidden" name="id" value="{{quoteid}}">
+                    <input type="submit" value="like">
+                </form>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6"></div>
 </div>
 {% endblock content %}
