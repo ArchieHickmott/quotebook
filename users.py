@@ -1,14 +1,17 @@
 from typing import Any, List, Self
 from datetime import date
 from sqlite3 import IntegrityError
-from os import getenv
+from os import getenv, path
 
 from flask import redirect, url_for, session
 from fortifysql import Database, Table, Column, max
 from flask_bcrypt import Bcrypt
 
 from app_errors import UserError, AuthError, DatabaseIntegrityError
-from env import PEPPER
+if path.isfile("env.py"):
+    from env import PEPPER
+else:
+    PEPPER = input("pepper: ")
 
 def protected(func):
     def wrapper(self, *args, **kw):
