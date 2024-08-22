@@ -1,4 +1,4 @@
-{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/form.html" as wtf %}
 {% from "_render_table.html" import render_table%}
 {% extends "template.html" %}
 {% block content %}
@@ -9,7 +9,7 @@
 </p>
 <form method="POST" id="form">
 {{form.crsf_token}}
-{{wtf.quick_form(form, button_map = {"submit": "secondary"})}}
+{{wtf.render_form(form, button_map = {"submit": "secondary"})}}
 </form>
 <br>
 <div class="row">
