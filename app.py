@@ -229,14 +229,14 @@ def login():
         try:
             id = id[0]
             user = User(id, password)
-        except TypeError: form.email.errors.append("Something went wrong, please try again. 😢")
+        except TypeError: form.submit.errors.append("Something went wrong, please try again. 😢")
         except AuthError as e:
             app.logger.warning(f"failed loggin for {id}")
             db.log_failed_logins.append(userid=id, 
                                         ip=request.remote_addr, 
                                         time=datetime.now(), 
                                         error_message=str(e))
-            form.password.errors.append("Something went wrong, please try again. 😢")
+            form.submit.errors.append("Something went wrong, please try again. 😢")
         else: # SUCCESSFUL LOGIN
             db.log_logins.append(userid=id, ip=request.remote_addr, time=datetime.now())
             session["user"] = vars(user)
