@@ -1,4 +1,4 @@
-# stdlib
+# Standard Imports
 from traceback import format_exc, print_exc
 from datetime import datetime
 import datetime as dt
@@ -6,7 +6,7 @@ from random import randint, randbytes
 import json
 import os
 
-# lib
+# External Imports
 try:
     from flask import render_template, redirect, url_for, request, session
     from fortifysql import Database, Table
@@ -23,44 +23,38 @@ except ImportError as e:
     if yn.lower() == "y":
         os.system("pip install -r requirements.txt")
 
-# local
+# Local Imports
 from users import User
-from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete
+from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete, QuoteForm, SearchForm
 from app_errors import AuthError, AppError, error_codes
 
+# App Config
 app = Flask(__name__)
 app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(app)
 app.config["SECRET_KEY"] = randbytes(128)
-if os.path.isfile("quote.db"):
-    db = Database("quote.db")
-else:
+
+# Database Config
+if not os.path.isfile("quote.db"):
     with open("quote.db", "w") as file:
-        pass
-    db = Database("quote.db")
-    db.multi_query(open("quote.sql").read())
-    db.reload_tables()
+        db = Database("quote.db")
+        db.multi_query(open("quote.sql").read())
+        db.reload_tables()
+
+db = Database("quote.db")
+    
 def log(request: str):
     if request.strip() == "COMMIT" or request.strip() == "BEGIN":
         return
     request = request.replace("\n", "").strip().replace("   ", "")
     app.logger.info(f"[Database] {request}")
+
 db.query_logging(True, log)
 db.backup("./backups")
 
 crypt = Bcrypt(app)
 User.db = db
 User.crypt = crypt
-
-class QuoteForm(FlaskForm):
-    name = StringField("Name", [InputRequired()])
-    date = StringField("Date")
-    quote = StringField("Quote", [InputRequired()])
-    submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
-
-class SearchForm(FlaskForm):
-    search = StringField("search", [InputRequired()])
-    submit = SubmitField("search", render_kw={"class": "button button-dark"})
 
 def like_quote(quoteid, userid):
     quotes: Table = db.quotes
@@ -142,7 +136,7 @@ def submit():
         form.name.data = ""
 
         if not date:
-            date = "2024"
+            date = dt.datetime.now().strftime("%Y")
         quote = form.quote.data
         form.quote.data = ""
         if len(quote) > 300 or len(name) > 300 or len(date) > 300:
@@ -157,35 +151,33 @@ def index():
     if request.method == "POST" and "user" in session:
         user = User.load(**session["user"])
         like_quote(request.form["id"], user.id())
-      
-    num = db.query("SELECT max(rowid) FROM quotes")[0][0]
-    if num == None or num == 0: 
+    
+    if db.query("SELECT count(*) FROM quotes")[0][0] == 0:
         quote = ("No quotes found", "0000", "No quotes found")
         return render_template("index.html", quote=quote, quoteid=0, best_quote=quote, search_form=SearchForm())
-    while True:
-        id = randint(1, num)
-        try:
-            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
-        except IndexError:
-            pass
-        else:
-            break
+    
+    quote = db.query(f"SELECT name, year, quote FROM quotes ORDER BY RANDOM() LIMIT 1")[0] 
     best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    
     return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote, search_form=SearchForm())
 
 @app.route("/quotes", methods=["GET", "POST"])
 def quotes():
     quotes: Table = db.quotes
+    
     if not "user" in session:
         quotes = quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
         return render_template("quotes.html", quotes=quotes, search_form=SearchForm())
+    
     quotes_ls = db.query("""SELECT name, year, quote, numlikes, rowid FROM quotes
                       ORDER BY numlikes DESC""") 
+    
     displayed_quotes = []
     for quote in quotes_ls:
         likes = quotes.get("likes").filter(f"rowid={quote[4]}").first()[0]
         likes = json.loads(likes)
         displayed_quotes.append((*quote, likes))
+        
     user = User.load(**session["user"])
     return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()), search_form=SearchForm())
     
