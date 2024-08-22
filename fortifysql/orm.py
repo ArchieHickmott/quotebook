@@ -542,7 +542,7 @@ class Table:
             raise SecurityError(".remove() was given no arguments and will delete the whole table")
         if expr=="" and kw != {}:
             for col, val in kw.items():
-                expr += f"{str(col)} = {val} AND"
+                expr += f"{str(col)} = {val} AND "
             expr = re.sub(r'\s*AND\s*$', "", expr)
         if expr != "":
             expr = "WHERE " + expr
@@ -823,7 +823,7 @@ class Select(Selectable):
             if isinstance(val, Select):
                 val = f"({repr(val)})"
             column = getattr(self.table, col)
-            expr += f"{str(col)} = {column.dtype(val)} AND"
+            expr += f"{str(col)} = {column.dtype(val)} AND "
         expr = re.sub(r'\s*AND\s*$', "", expr)
         self.statement += f"WHERE {expr} " 
         return self           

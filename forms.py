@@ -33,3 +33,13 @@ class UpdateDataForm(FlaskForm):
 
 class ConfirmDelete(FlaskForm):
     submit = SubmitField("DELTE ACCOUNT", render_kw={"class": "btn btn-warning"})
+
+class QuoteForm(FlaskForm):
+    name = StringField("Name", [InputRequired()])
+    date = StringField("Date")
+    quote = StringField("Quote", [InputRequired()])
+    submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
+
+class SearchForm(FlaskForm):
+    search = StringField("search", [InputRequired()])
+    submit = SubmitField("search", render_kw={"class": "button button-dark"})
