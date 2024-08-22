@@ -4,3 +4,4 @@ env.py
 /*.db
 /backups/
 /.venv
+data_classes.py

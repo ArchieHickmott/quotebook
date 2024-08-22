@@ -27,103 +27,41 @@ except ImportError as e:
 from users import User
 from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete, QuoteForm, SearchForm
 from app_errors import AuthError, AppError, error_codes
+from config import create_app
 
-# App Config
-app = Flask(__name__)
-app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
-bootstrap = Bootstrap5(app)
-app.config["SECRET_KEY"] = randbytes(128)
+# create a pre-configured app
+app, db, crypt = create_app()
 
-# Database Config
-if not os.path.isfile("quote.db"):
-    with open("quote.db", "w") as file:
-        db = Database("quote.db")
-        db.multi_query(open("quote.sql").read())
-        db.reload_tables()
+def user_has_liked(userid, quoteid) -> bool:
+    count_likes(quoteid)
+    if db.likes.get().filter(quoteid=int(quoteid), userid=int(userid)).all():
+        return True
+    return False    
 
-db = Database("quote.db")
-    
-def log(request: str):
-    if request.strip() == "COMMIT" or request.strip() == "BEGIN":
-        return
-    request = request.replace("\n", "").strip().replace("   ", "")
-    app.logger.info(f"[Database] {request}")
-
-db.query_logging(True, log)
-db.backup("./backups")
-
-crypt = Bcrypt(app)
-User.db = db
-User.crypt = crypt
+def count_likes(quoteid):
+    num_likes = db.query(f"SELECT count(quoteid) FROM likes WHERE quoteid={quoteid}")[0][0]
+    db.quotes.replace(f"quoteid={quoteid}", numlikes=num_likes)
 
 def like_quote(quoteid, userid):
-    quotes: Table = db.quotes
-    likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
-    likes = json.loads(likes)
-    assert isinstance(likes, list)
-    if int(userid) in likes:
+    if user_has_liked(userid, quoteid):
         return
-    likes.append(int(userid))
-    db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
-    db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")
+    db.likes.append(quoteid=int(quoteid), userid=int(userid))
+    count_likes(quoteid)
     
 def unlike_quote(quoteid, userid):
-    quotes: Table = db.quotes
-    likes = quotes.get("likes").filter(f"rowid={quoteid}").first()[0]
-    likes = json.loads(likes)
-    assert isinstance(likes, list)
-    if int(userid) in likes:
-        likes.remove(int(userid))
-        db.query(f"UPDATE quotes SET likes=? WHERE rowid={quoteid}", (str(likes),))
-        db.query(f"UPDATE quotes SET numlikes={len(likes)} WHERE rowid={quoteid}")    
- 
+    db.likes.remove(quoteid=int(quoteid), userid=int(userid))
+    count_likes(quoteid)
+
 @app.before_request
 def before():
-    form: SearchForm = SearchForm()
-    quotes: Table = db.quotes
     if "like" in request.form and "user" in session:
         user = User.load(**session["user"])
+        print(request.form["like"])
         like_quote(request.form["like"], user.id())
     elif "unlike" in request.form and "user" in session:
         user = User.load(**session["user"])
+        print(request.form["unlike"])
         unlike_quote(request.form["unlike"], user.id())
-    if not form.validate_on_submit():
-        return
-    if not "user" in session:
-        search = form.search.data
-        sql = """
-                SELECT name, year, quote, numlikes FROM quotes 
-                WHERE name LIKE ?
-                OR year LIKE ?
-                OR quote LIKE ?
-            """
-        results = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
-        return render_template("quotes.html", quotes=results, search_form=form)
-    search = form.search.data
-    sql = """
-            SELECT name, year, quote, numlikes, rowid FROM quotes 
-            WHERE name LIKE ?
-            OR year LIKE ?
-            OR quote LIKE ?
-            ORDER BY numlikes DESC
-            """
-    quotes_ls = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
-    displayed_quotes = []
-    for quote in quotes_ls:
-        likes = quotes.get("likes").filter(f"rowid={quote[4]}").first()[0]
-        likes = json.loads(likes)
-        displayed_quotes.append((*quote, likes))
-    user = User.load(**session["user"])
-    
-    search = form.search.data
-    sql = """
-            SELECT name, year, quote, numlikes FROM quotes 
-            WHERE name LIKE ?
-            OR year LIKE ?
-            OR quote LIKE ?
-            """
-    results = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
-    return render_template("quotes.html", quotes=displayed_quotes, id=int(user.id()), search_form=SearchForm())
  
 @app.route('/submit', methods=["GET", "POST"])
 def submit():
