@@ -2,7 +2,7 @@
 from traceback import format_exc, print_exc
 from datetime import datetime
 import datetime as dt
-from random import randint
+from random import randint, randbytes
 import json
 import os
 
@@ -25,7 +25,7 @@ from app_errors import AuthError, AppError, error_codes
 app = Flask(__name__)
 app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(app)
-app.config["SECRET_KEY"] = "attendance is the biggest indicator for success"
+app.config["SECRET_KEY"] = randbytes(128)
 if os.path.isfile("quote.db"):
     db = Database("quote.db")
 else:
@@ -74,7 +74,7 @@ def log(request: str):
     request = request.replace("\n", "").strip().replace("   ", "")
     app.logger.info(f"[Database] {request}")
 db.query_logging(True, log)
-db.backup("C:/Users/25hickmar/OneDrive - St Patricks College/Digital Solutions/small projects/quotebook")
+db.backup("./backups")
 
 crypt = Bcrypt(app)
 User.db = db
