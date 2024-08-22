@@ -182,10 +182,14 @@ def submit():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    num = db.query("SELECT max(rowid) FROM quotes")[0][0]
     if request.method == "POST" and "user" in session:
         user = User.load(**session["user"])
         like_quote(request.form["id"], user.id())
+      
+    num = db.query("SELECT max(rowid) FROM quotes")[0][0]
+    if num == None or num == 0: 
+        quote = ("No quotes found", "0000", "No quotes found")
+        return render_template("index.html", quote=quote, quoteid=0, best_quote=quote, search_form=SearchForm())
     while True:
         id = randint(1, num)
         try:
