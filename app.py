@@ -56,11 +56,9 @@ def unlike_quote(quoteid, userid):
 def before():
     if "like" in request.form and "user" in session:
         user = User.load(**session["user"])
-        print(request.form["like"])
         like_quote(request.form["like"], user.id())
     elif "unlike" in request.form and "user" in session:
         user = User.load(**session["user"])
-        print(request.form["unlike"])
         unlike_quote(request.form["unlike"], user.id())
  
 @app.route('/submit', methods=["GET", "POST"])
@@ -80,7 +78,7 @@ def submit():
             form.quote.errors.append(ValueError("too long"))
         else:
             db.quotes.append(name=name, year=date, quote=quote)
-    results = quotes("name", "year", "quote")
+    results = db.quotes("name", "year", "quote")
     quotes = []
     for quote in results:
         quotes.append(Quote(*quote))
@@ -88,23 +86,20 @@ def submit():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == "POST" and "user" in session:
-        user = User.load(**session["user"])
-        like_quote(request.form["id"], user.id())
-    
     if db.query("SELECT count(*) FROM quotes")[0][0] == 0:
-        quote = ("No quotes found", "0000", "No quotes found")
-        return render_template("index.html", quote=quote, quoteid=0, best_quote=quote, search_form=SearchForm())
+        quote = Quote("No quotes found", "0000", "No quotes found")
+        return render_template("index.html", quote=quote, quoteid=0, best_quote=quote)
     
     quote = db.query(f"SELECT name, year, quote FROM quotes ORDER BY RANDOM() LIMIT 1")[0] 
     best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
     
-    return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote, search_form=SearchForm())
+    quote = Quote(*quote)
+    best_quote = Quote(*best_quote)
+    
+    return render_template("index.html", quote=quote, quoteid=id, best_quote=best_quote)
 
 @app.route("/quotes", methods=["GET", "POST"])
 def quotes():
-    quotes: Table = db.quotes
-    
     if not "user" in session:
         results = db.quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
         quotes = []
@@ -112,6 +107,14 @@ def quotes():
             quotes.append(Quote(*quote))
         return render_template("quotes.html", quotes=quotes)
     user = User.load(**session["user"])
+    sql = f"""SELECT  name, year, quote, numlikes, quoteid, 
+                        CASE WHEN quoteid IN (SELECT quoteid 
+                                                FROM likes 
+                                                WHERE userid={user.id()}) 
+                        THEN 1 ELSE 0 END
+                FROM quotes
+                ORDER BY numlikes DESC"""
+    quotes = db.query(sql)
     return render_template("quotes.html", quotes=quotes, id=int(user.id()))
 
 @app.route("/search", methods=["GET", "POST"])
@@ -166,7 +169,6 @@ def login():
                                         error_message=str(e))
             form.submit.errors.append("Something went wrong, please try again. 😢")
         else: # SUCCESSFUL LOGIN
-            print("SUCCESS")
             db.log_logins.append(userid=id, ip=request.remote_addr, time=datetime.now())
             session["user"] = vars(user)
             return redirect(url_for('home'))
@@ -196,33 +198,22 @@ def register():
 # home page (logged in users only)
 @app.route('/home', methods=["GET", "POST"])
 def home():
-    quotes: Table = db.quotes
-    num = db.query("SELECT max(rowid) FROM quotes")[0][0]
-    while True:
-        id = randint(1, num)
-        try:
-            quote = db.query(f"SELECT name, year, quote FROM quotes WHERE rowid = {id}")[0]
-            likes = quotes.get("likes").filter(f"rowid={id}").first()[0]
-            likes = json.loads(likes)
-            quote = (*quote, likes)
-        except IndexError:
-            pass
-        else:
-            break
     if not "user" in session:
-        return redirect(url_for("login")), 401
-    user = User.load(**session["user"])
-    if not user.is_logged_in():
         return redirect(url_for("login"))
-    best_quote = db.query("SELECT name, year, quote, rowid FROM quotes ORDER BY numlikes DESC LIMIT 1")[0]
-    print(best_quote)
-    b_likes = quotes.get("likes").filter(f"rowid={best_quote[3]}").first()[0]
-    b_likes = json.loads(b_likes)
-    best_quote = (*best_quote, b_likes)
-    bid = best_quote[3]
+        
+    user = User.load(**session["user"])
+    
+    if db.query("SELECT count(*) FROM quotes")[0][0] == 0:
+        quote = Quote("No quotes found", "0000", "No quotes found")
+        return render_template("index.html", quote=quote, quoteid=0, best_quote=quote)
+    
+    quote = db.query(f"SELECT quoteid, name, year, quote FROM quotes ORDER BY RANDOM() LIMIT 1")[0] 
+    best_quote = db.quotes.get("quoteid", "name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    
+    quote = Quote(*quote)
+    best_quote = Quote(*best_quote)
     return render_template("home.html", user=user, id=int(user.id()),
-                           quote=quote, quoteid=id, 
-                           best_quote=best_quote, best_quote_id=bid)
+                           quote=quote, best_quote=best_quote)
 
 # MARK: logout/delete
 @app.route("/logout")

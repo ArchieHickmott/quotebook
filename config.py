@@ -43,7 +43,7 @@ def create_app() -> Tuple[Flask, QuoteDb, Bcrypt] :
         app.logger.info(f"[Database] {request}")
 
     db.query_logging(True, log)
-    db.backup("./backups")
+    db.backup("/backups")
 
     crypt = Bcrypt(app)
     User.db = db

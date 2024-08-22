@@ -50,9 +50,9 @@ class User:
         return self.__dict__   
     
     def has_liked(self, quoteid) -> bool:
-        return self.user_has_liked(self.__id, quoteid)
+        return self._user_has_liked(self.__id, quoteid)
     
-    def user_has_liked(self, userid, quoteid) -> bool:
+    def _user_has_liked(self, userid, quoteid) -> bool:
         if self.db.likes.get().filter(quoteid=int(quoteid), userid=int(userid)).all():
             return True
         return False    
