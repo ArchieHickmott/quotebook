@@ -7,15 +7,21 @@ import json
 import os
 
 # lib
-from flask import render_template, redirect, url_for, request, session
-from fortifysql import Database, Table
-from flask import Flask, render_template, request, abort, Response
-from flask_bootstrap import Bootstrap5
-from flask_wtf import FlaskForm
-from flask_bcrypt import Bcrypt
-from werkzeug.exceptions import HTTPException
-from wtforms import StringField, DateField, SubmitField, HiddenField
-from wtforms.validators import InputRequired
+try:
+    from flask import render_template, redirect, url_for, request, session
+    from fortifysql import Database, Table
+    from flask import Flask, render_template, request, abort, Response
+    from flask_bootstrap import Bootstrap5
+    from flask_wtf import FlaskForm
+    from flask_bcrypt import Bcrypt
+    from werkzeug.exceptions import HTTPException
+    from wtforms import StringField, DateField, SubmitField, HiddenField
+    from wtforms.validators import InputRequired
+except ImportError as e:
+    print(e)
+    yn = input("Would you like to install the required libraries? (Y,n): ")
+    if yn.lower() == "y":
+        os.system("pip install -r requirements.txt")
 
 # local
 from users import User
