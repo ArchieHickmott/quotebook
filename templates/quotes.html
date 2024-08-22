@@ -15,16 +15,16 @@
         <td>{{data}}</td>
         {% endfor %}
         <td>
-        {% if id in row[5] %}
-        <form method="POST" class="font-size: small">
+        {% if row[5] == 1 %}
+        <form method="POST">
             <input type="hidden" name="unlike" value="{{row[4]}}">
             <input type="submit" value="unlike">
-        </form> 
+        </form>
         {% else %}
         <form method="POST" class="font-size: small">
             <input type="hidden" name="like" value="{{row[4]}}">
             <input type="submit" value="like">
-        </form> 
+        </form>
         {% endif %}
         </td>
     </tr>

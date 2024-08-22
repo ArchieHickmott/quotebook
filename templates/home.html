@@ -13,7 +13,7 @@
             <div class="col-sm-1"></div>
             <div class="col-sm-11"><b> - {{quote[0]}}, {{quote[1]}}</b>
             {% if "user" in session %}
-                {% if id in quote[3] %}
+                {% if user.has_liked(quoteid) %}
                 <form method="POST" class="font-size: small">
                     <input type="hidden" name="unlike" value="{{quoteid}}">
                     <input type="submit" value="unlike">
@@ -37,7 +37,7 @@
             <div class="col-sm-1"></div>
             <div class="col-sm-11"><b> - {{best_quote[0]}}, {{best_quote[1]}}</b>
             {% if "user" in session %}
-                {% if id in best_quote[4] %}
+                {% if user.has_liked(best_quote_id) %}
                 <form method="POST" class="font-size: small">
                     <input type="hidden" name="unlike" value="{{best_quote_id}}">
                     <input type="submit" value="unlike">
