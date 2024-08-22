@@ -24,12 +24,12 @@ def create_app() -> Tuple[Flask, QuoteDb, Bcrypt] :
     Bootstrap5(app)
     app.config["SECRET_KEY"] = "attendance is the biggest indicator for success"
     db: QuoteDb
-    if os.path.isfile("quote.db"):
-        db = QuoteDb("quote.db")
+    if os.path.isfile("fake_quote.db"):
+        db = QuoteDb("fake_quote.db")
     else:
-        with open("quote.db", "w") as file:
+        with open("fake_quote.db", "w") as file:
             pass
-        db = QuoteDb("quote.db")
+        db = QuoteDb("fake_quote.db")
         db.multi_query("""
 CREATE TABLE users (
     userid       INTEGER PRIMARY KEY,
@@ -76,7 +76,15 @@ CREATE TABLE quotes (
     quote    TEXT,
     numlikes INTEGER DEFAULT (0) 
 );
-
+INSERT INTO quotes VALUES (1, "name", "2024", "example quote 1", 0);
+INSERT INTO quotes VALUES (2, "name", "2024", "example quote 2", 0);
+INSERT INTO quotes VALUES (3, "name", "2024", "example quote 3", 0);
+INSERT INTO quotes VALUES (4, "name", "2024", "example quote 4", 0);
+INSERT INTO quotes VALUES (5, "name", "2024", "example quote 5", 0);
+INSERT INTO quotes VALUES (6, "name", "2024", "example quote 6", 0);
+INSERT INTO quotes VALUES (7, "name", "2024", "example quote 7", 0);
+INSERT INTO quotes VALUES (8, "name", "2024", "example quote 8", 0);
+INSERT INTO quotes VALUES (9, "name", "2024", "example quote 9", 0);
     """)
         db.reload_tables()
     def log(request: str):

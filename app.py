@@ -3,8 +3,6 @@ from traceback import format_exc, print_exc
 from datetime import datetime
 import datetime as dt
 from random import randint
-import json
-import os
 
 # lib
 from flask import render_template, redirect, url_for, request, session
@@ -18,7 +16,7 @@ from werkzeug.exceptions import HTTPException
 from users import User
 from forms import LoginForm, RegisterForm, ConfirmDelete, QuoteForm, SearchForm
 from app_errors import AuthError, AppError, error_codes
-from config import QuoteDb, create_app
+from config import create_app
     
 app, db, crypt = create_app()
 
