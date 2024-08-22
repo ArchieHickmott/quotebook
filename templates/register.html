@@ -4,6 +4,6 @@
 <h2>Register</h2>
 <form method="POST" class="was-validated">
     {{ form.csrf_token }}
-    {{ wtf.quick_form(form) }}
+    {{ wtf.render_form(form) }}
 </form>
 {% endblock content %}

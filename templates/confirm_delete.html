@@ -7,6 +7,6 @@ this cannot be undone
 </div>
 <form method="POST">
     {{form.csrf_token}}
-    {{wtf.quick_form(form)}}
+    {{wtf.render_form(form)}}
 </form>
 {% endblock content %}

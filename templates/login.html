@@ -7,7 +7,7 @@
 <h2>Login</h2>
 <form method="POST">
     {{ form.csrf_token }}
-    {{ wtf.quick_form(form) }}
+    {{ wtf.render_form(form) }}
 </form>
 <br>
 <p>
