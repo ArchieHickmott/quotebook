@@ -10,6 +10,7 @@ from fortifysql import Database, Table
 
 from users import User
 
+
 class QuoteDb(Database):
     users: Table
     reports: Table
@@ -18,8 +19,9 @@ class QuoteDb(Database):
     passwords: Table
     likes: Table
     quotes: Table
-    
-def create_app() -> Tuple[Flask, QuoteDb, Bcrypt] :
+
+
+def create_app() -> Tuple[Flask, QuoteDb, Bcrypt]:
     # App Config
     app = Flask(__name__)
     app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
@@ -29,13 +31,13 @@ def create_app() -> Tuple[Flask, QuoteDb, Bcrypt] :
     # Database Config
     if not os.path.isfile("quote.db"):
         with open("quote.db", "w") as file:
-            pass # the whole with open() as file: pass is for to force python to garbage collect
+            pass  # the whole with open() as file: pass is for to force python to garbage collect
         db = QuoteDb("quote.db")
         db.multi_query(open("quote.sql").read())
         db.reload_tables()
     else:
         db = QuoteDb("quote.db")
-        
+
     def log(request: str):
         if request.strip() == "COMMIT" or request.strip() == "BEGIN":
             return

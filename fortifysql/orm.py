@@ -13,9 +13,12 @@ from .utils import is_drop_query, is_dangerous_delete
 from .errors import FortifySQLError, DatabaseConfigError, SecurityError
 from .sql_data_types import get_dtype, LogicalString, primitives
 
+
 class Database:
     # initialise connection to database
-    def __init__(self, path: str, check_same_thread: bool=False, name: str = "") -> None:
+    def __init__(
+        self, path: str, check_same_thread: bool = False, name: str = ""
+    ) -> None:
         """Create a connection to a database, checks if the database exists
             when loading in tables, the table will be an attribute of the database class the attribute name matches the table name
             however if the attribute already exists the table will be renamed to tbl_{table name}
@@ -31,7 +34,7 @@ class Database:
         if os.path.isfile(path):
             if name == "":
                 if "/" in path:
-                    self.__name = path.rsplit('/', 1)[1]
+                    self.__name = path.rsplit("/", 1)[1]
                 else:
                     self.__name = path
             else:
@@ -39,7 +42,9 @@ class Database:
         elif path == ":memory:":
             self.__name = "memory"
         else:
-            raise FortifySQLError(f"SQL error - Database does not exist on path: {path}.")
+            raise FortifySQLError(
+                f"SQL error - Database does not exist on path: {path}."
+            )
 
         self.error = False
         self.allow_dropping = False
@@ -52,7 +57,7 @@ class Database:
         self.path = path
         self.conn = sqlite3.connect(path, check_same_thread=check_same_thread)
         self.recent_data = None
-        
+
         self.reload_tables()
 
     # to safely close database
@@ -63,21 +68,35 @@ class Database:
         if self.conn is not None:
             self.conn.rollback()
             self.conn.close()
-                
+
     def reload_tables(self):
-        reserved_names = ["error", "allow_dropping", "check_delete_statements", "error_logging", "banned_statements", "banned_syntax",
-                          "cur", "path", "conn", "recent_data", "tables", "logging"]
+        reserved_names = [
+            "error",
+            "allow_dropping",
+            "check_delete_statements",
+            "error_logging",
+            "banned_statements",
+            "banned_syntax",
+            "cur",
+            "path",
+            "conn",
+            "recent_data",
+            "tables",
+            "logging",
+        ]
         self.tables = []
-        raw_tables = self.query("SELECT name, sql, tbl_name FROM sqlite_master WHERE type='table'")
+        raw_tables = self.query(
+            "SELECT name, sql, tbl_name FROM sqlite_master WHERE type='table'"
+        )
         for table in raw_tables:
             if table[0] in reserved_names:
                 table[0] = f"tbl_{table[0]}"
             table_class = Table(self, table[0], table[1], table[2])
             self.tables.append(table_class)
-            
+
         for table in self.tables:
             setattr(self, str(table), table)
-    
+
     def import_configuration(self, path: str = "", json_string: str = ""):
         """Imports a database configuration from a JSON file or a JSON string \n
         For infromation on how to format the JSON go to: https://archiehickmott.github.io/fortify-sql/
@@ -94,12 +113,14 @@ class Database:
         is_json = json_string != ""
         config = None
         if is_path and not is_json:
-            with open(path, 'r') as file:
+            with open(path, "r") as file:
                 config = json.load(file)
         elif is_json and not is_path:
             config = json.loads(json_string)
         elif is_path and is_json:
-            raise DatabaseConfigError("Can't have import configuration from file and string at the same time")
+            raise DatabaseConfigError(
+                "Can't have import configuration from file and string at the same time"
+            )
         else:
             raise DatabaseConfigError("No arguments given to import_configuration()")
 
@@ -159,7 +180,7 @@ class Database:
         else:
             self.conn.set_trace_callback(func)
 
-    #allows dev to set the row factory
+    # allows dev to set the row factory
     def row_factory(self, factory: sqlite3.Row | Callable = sqlite3.Row) -> None:
         """sets the row factory of the connection \n refer to SQLite3 documentation@https://docs.python.org/3/library/sqlite3.html#sqlite3-howto-row-factory for more info
 
@@ -265,7 +286,11 @@ class Database:
         if is_dangerous_delete(request):
             return True
 
-        if not ((parsed.get_type() == "DELETE") and (not self.allow_dropping) and self.check_delete_statements):
+        if not (
+            (parsed.get_type() == "DELETE")
+            and (not self.allow_dropping)
+            and self.check_delete_statements
+        ):
             return False
         token_list = sqlparse.sql.TokenList(parsed.tokens)
         for token in token_list:
@@ -302,7 +327,9 @@ class Database:
             return False
 
     # Excecutes a single query on the database
-    def query(self, request: str, parameters: tuple=(), save_data=True) -> List[List[Any]] | None:
+    def query(
+        self, request: str, parameters: tuple = (), save_data=True
+    ) -> List[List[Any]] | None:
         """Handles querying a database, includes paramaterisation for safe user inputing. \n
         SECURITY NOTE: this allows a single statement to be excecuted no more
 
@@ -322,8 +349,8 @@ class Database:
             List[List[Any]] | None: None if no data was returned by SQL, returns a table if not
         """
         try:
-            with self.conn: \
-            request = str(request)
+            with self.conn:
+                request = str(request)
             parsed = sqlparse.parse(request)
             if not len(parsed) == 1:
                 raise SecurityError("Multiple statements not allowed in a single query")
@@ -333,15 +360,21 @@ class Database:
 
             if self.banned_statements != []:
                 if parsed[0].get_type().upper() in self.banned_statements:
-                    raise SecurityError(f"Attempted to execute banned statement: {request}")
+                    raise SecurityError(
+                        f"Attempted to execute banned statement: {request}"
+                    )
 
             if self.banned_syntax != []:
                 for banned in self.banned_syntax:
                     if banned in request:
-                        raise SecurityError(f"Attempted to execute banned syntax: {request}")
+                        raise SecurityError(
+                            f"Attempted to execute banned syntax: {request}"
+                        )
 
             if self.is_dangerous_delete(request, parameters):
-                raise SecurityError(f"Attempted to execute dangerous statement: {request}")
+                raise SecurityError(
+                    f"Attempted to execute dangerous statement: {request}"
+                )
 
             self.cur = self.conn.cursor()
             self.cur.execute(request, parameters)
@@ -362,7 +395,9 @@ class Database:
                 raise e
 
     # Excecutes multiple queries on the database
-    def multi_query(self, request: str, parameters: tuple=(), save_data=True) -> List[List[Any]]:
+    def multi_query(
+        self, request: str, parameters: tuple = (), save_data=True
+    ) -> List[List[Any]]:
         """Handles querying a database, includes paramaterisation for safe user inputing. \n
         SECURITY NOTE: this allows a multiple statements to be executed, only use if necessery
 
@@ -391,14 +426,17 @@ class Database:
                     print(f"SQL DATABASE ERROR, database: {self.path}, error: {e}")
             else:
                 raise e
-            
-class Column: # first defined here for typechecking
+
+
+class Column:  # first defined here for typechecking
     name = ...
     dtype = ...
     table = ...
 
+
 class Table:
     """Used by FortifySQL ORM to represent a table"""
+
     def __init__(self, db: Database, name: str, sql, tbl_name=""):
         """Used by FortifySQL ORM to represent a table \n
             If a column name matches one of the Table attributes it will be renamed to col_{name}
@@ -413,18 +451,18 @@ class Table:
         self.__name = name
         self.sql = sql
         self.tbl_name = tbl_name
-        
+
         self.read_only = False
-        
+
         if db:
             self.db = db
-        
+
         self.columns = self.__import_columns()
         for column in self.columns:
             if str(column) in self.reserved_names:
                 column.name = f"col_{column.name}"
             setattr(self, column.name, column)
-         
+
     def __str__(self) -> str:
         """to convert to str datatype
 
@@ -432,7 +470,7 @@ class Table:
             (str): table name
         """
         return self.__name
-    
+
     def __call__(self, *args):
         """returns all data in a table"""
         if args == ():
@@ -441,30 +479,36 @@ class Table:
             args = "".join(f"{arg}, " for arg in args).strip(", ")
         query = f"SELECT {args} FROM {self.__name}"
         return self.db.query(query)
-        
+
     def __import_columns(self) -> List[Column]:
         """
         imports the columns from the connected Database
-        
+
         Returns:
             List[Columns]: a list of columns in a table
         """
-        cursor = self.db.conn.execute(f'PRAGMA table_info({self.__name})')
+        cursor = self.db.conn.execute(f"PRAGMA table_info({self.__name})")
         data = cursor.fetchall()
         column_info = [[row[1], row[2]] for row in data]
-        column_info = [(column_info[n][0], get_dtype(column_info[n][1])) for n, column in enumerate(column_info)]
+        column_info = [
+            (column_info[n][0], get_dtype(column_info[n][1]))
+            for n, column in enumerate(column_info)
+        ]
 
         columns = []
         for column in column_info:
-            columns.append(Column(column[0], column[1], self))  
-        return columns    
-    
+            columns.append(Column(column[0], column[1], self))
+        return columns
+
     def __edits_table(func):
         def wrapper(self: Self, *args, **kw):
             if self.read_only:
-                raise SecurityError(f"tried to edit a table that is marked as read only, table: {self}, {func}")
-            else: 
+                raise SecurityError(
+                    f"tried to edit a table that is marked as read only, table: {self}, {func}"
+                )
+            else:
                 return func(self, *args, **kw)
+
         return wrapper
 
     def get(self, *cols):
@@ -474,7 +518,7 @@ class Table:
             Select : select class used for method chaining
         """
         return Select(self).select(*cols)
-    
+
     def get_distinct(self, *cols):
         """gets distinct data from the table, NOTE: use .first(), .all() etc. to return the data
 
@@ -482,7 +526,7 @@ class Table:
             Select : select class used for method chaining
         """
         return Select(self).distinct(*cols)
-    
+
     def filter(self, expr: str = "", **kw):
         """gets data from the table where an expression is true \n
         NOTE: use .first(), .all() etc. to return the data
@@ -491,12 +535,12 @@ class Table:
             Select : select class used for method chaining
         """
         return Select(self).select().filter(expr, **kw)
-    
+
     @__edits_table
     def append(self, **kw) -> None:
-        """appends data to the end of a table
-        """
-        if kw == {}: return 
+        """appends data to the end of a table"""
+        if kw == {}:
+            return
         cols = []
         values = []
         paramaters = ()
@@ -504,27 +548,28 @@ class Table:
             column = getattr(self, col)
             cols.append(str(col))
             if isinstance(val, Select):
-                values.append('(' + str(val) + ')')
+                values.append("(" + str(val) + ")")
             elif isinstance(val, str) or isinstance(val, LogicalString):
                 paramaters = (*paramaters, val)
-                values.append('?')
-            else:  
-                values.append(column.dtype(val))  
-        cols = '(' + ', '.join(cols) + ')'
-        values = '(' + ', '.join(str(value) for value in values) + ')'
+                values.append("?")
+            else:
+                values.append(column.dtype(val))
+        cols = "(" + ", ".join(cols) + ")"
+        values = "(" + ", ".join(str(value) for value in values) + ")"
         sql = f"INSERT INTO {self.__name} {cols} VALUES {values}"
         self.db.query(sql, paramaters)
-    
+
     @__edits_table
-    def replace(self, expr: str = "", **kw) -> None:   
+    def replace(self, expr: str = "", **kw) -> None:
         """used to replace data in a table
 
         Args:
             expr (str, optional): _description_. Defaults to "".
         """
-        if kw == {}: return
+        if kw == {}:
+            return
         vals = ""
-        paramaters=()
+        paramaters = ()
         for col, val in kw.items():
             if isinstance(val, str) or isinstance(val, LogicalString):
                 vals += f"{col} = ?, "
@@ -535,25 +580,29 @@ class Table:
         where = "" if expr == "" else f"WHERE {expr}"
         sql = f"UPDATE {self.__name} SET {vals} {where}"
         self.db.query(sql, paramaters)
-    
+
     @__edits_table
     def remove(self, expr: str = "", **kw):
-        if (not self.db.allow_dropping) and expr=="" and kw=={}:
-            raise SecurityError(".remove() was given no arguments and will delete the whole table")
-        if expr=="" and kw != {}:
+        if (not self.db.allow_dropping) and expr == "" and kw == {}:
+            raise SecurityError(
+                ".remove() was given no arguments and will delete the whole table"
+            )
+        if expr == "" and kw != {}:
             for col, val in kw.items():
                 expr += f"{str(col)} = {val} AND "
-            expr = re.sub(r'\s*AND\s*$', "", expr)
+            expr = re.sub(r"\s*AND\s*$", "", expr)
         if expr != "":
             expr = "WHERE " + expr
         self.db.query(f"DELETE FROM {self.__name} {expr}")
-        
+
     def pretty_print(self, limit: str | int = None):
         to_print = Select(self).select().pretty_print(limit=limit)
         return to_print
-         
+
+
 class Column:
     used_in_join = False
+
     def __init__(self, name: str, dtype, table: Table):
         """Used to represent a column in the FortifySQL ORM
 
@@ -565,13 +614,13 @@ class Column:
         self.name = name
         self.dtype = dtype
         self.table = table
-    
+
     def __call__(self):
         """returns all the data in a column"""
         data = self.table.get(self.name)
         data = [row[0] for row in data]
         return data
-            
+
     def __str__(self) -> LogicalString:
         """used for str(Column())
 
@@ -581,7 +630,7 @@ class Column:
         if self.used_in_join:
             return repr(self)
         return LogicalString(f"{self.name}")
-    
+
     def __repr__(self) -> LogicalString:
         """used for repr(Column())
 
@@ -589,7 +638,7 @@ class Column:
             str: name of the column
         """
         return LogicalString(f"{self.table}.{self.name}")
-    
+
     def __eq__(self, value: object) -> str:
         """used for query formatting i.e: table.where(column1 == column2)
 
@@ -685,12 +734,14 @@ class Column:
         if isinstance(value, Column):
             return LogicalString(f"{self} != {value}")
         if isinstance(value, primitives):
-            return LogicalString(f"{self} != {self.dtype(value)}")        
+            return LogicalString(f"{self} != {self.dtype(value)}")
         if value == "?":
             return LogicalString(f"{self} != ?")
 
+
 class BaseStatement:
     """base class that other Statement types are built from"""
+
     def __init__(self, table: Table) -> None:
         """base class that other Statement types are built from
 
@@ -699,12 +750,14 @@ class BaseStatement:
         """
         self.table = table
         self.statement = ""
-    
+
     def __repr__(self) -> str:
         return self.statement
 
+
 class Selectable(BaseStatement):
     """base class for all queries that return data"""
+
     def first(self, *parameters) -> List[Any]:
         """returns the first row of data from a selectable query
 
@@ -719,7 +772,7 @@ class Selectable(BaseStatement):
             return data[0]
         else:
             return None
-    
+
     def all(self, *parameters) -> List[List[Any]]:
         """returns all data from a query
 
@@ -730,18 +783,18 @@ class Selectable(BaseStatement):
             List[List[Any]]: data from query
         """
         return self.table.db.query(self.statement, parameters)
-    
+
     def limit(self, limit: str | int, *paramaters):
         """used to limit the amount of data returned
-        
+
         Args:
-            args (str, int): the maximum amount of rows that can be returned 
+            args (str, int): the maximum amount of rows that can be returned
         """
         self.statement += "LIMIT " + str(limit) + " "
         return self.table.db.query(self.statement, paramaters)
-    
+
     def pretty_print(self, *parameters, limit: str | int = None):
-        """used to print the data from the request nicely to console, uses pandas 
+        """used to print the data from the request nicely to console, uses pandas
 
         Args:
             limit (str | int, optional): how many rows to be returned. Defaults to None.
@@ -749,7 +802,7 @@ class Selectable(BaseStatement):
         if limit:
             self.statement += "LIMIT " + str(limit) + " "
         request = self.statement
-        
+
         db = self.table.db
         parsed = sqlparse.parse(request)
         if not len(parsed) == 1:
@@ -762,8 +815,10 @@ class Selectable(BaseStatement):
         if db.banned_syntax != []:
             for banned in db.banned_syntax:
                 if banned in request:
-                    raise SecurityError(f"Attempted to execute banned syntax: {request}")
-                
+                    raise SecurityError(
+                        f"Attempted to execute banned syntax: {request}"
+                    )
+
         cur = db.conn.cursor()
         cur.execute(request, parameters)
         data = cur.fetchall()
@@ -773,36 +828,38 @@ class Selectable(BaseStatement):
         prettytable = PrettyTable(col_names)
         prettytable.add_rows(data)
         print(prettytable)
-        return data     
+        return data
+
 
 class Select(Selectable):
     """used to select data from a table"""
+
     def select(self, *cols):
         """selects given columns from a table
 
         Returns:
             self: used for method chain
         """
-        if cols == (): # if no columns are given then assume * wildcard
+        if cols == ():  # if no columns are given then assume * wildcard
             cols = "*"
         else:
-            cols = ", ".join(str(col) for col in cols) # format columns
+            cols = ", ".join(str(col) for col in cols)  # format columns
         self.statement += f"SELECT {cols} FROM {self.table} "
         return self
-    
+
     def distinct(self, *cols):
         """selects distinct data from given columns from a table
 
         Returns:
             self: used for method chain
         """
-        if cols == (): # if no columns are given then assume * wildcard
+        if cols == ():  # if no columns are given then assume * wildcard
             cols = "*"
         else:
-            cols = ", ".join(str(col) for col in cols) # format columns
+            cols = ", ".join(str(col) for col in cols)  # format columns
         self.statement += f"SELECT DISTINCT {cols} FROM {self.table} "
         return self
-    
+
     def filter(self, expr: str = "", **kw):
         """used to add a WHERE clause to a statement
 
@@ -813,7 +870,10 @@ class Select(Selectable):
             Database: returns the Database class NOT the data, use .run() or .paramaters to get the data
         """
         if kw == {}:
-            if expr == "": raise FortifySQLError("""expected non "" expression given to .filter()""")
+            if expr == "":
+                raise FortifySQLError(
+                    """expected non "" expression given to .filter()"""
+                )
             if isinstance(expr, Select):
                 expr = f"({repr(expr)})"
             self.statement += f"WHERE {expr} "
@@ -824,10 +884,10 @@ class Select(Selectable):
                 val = f"({repr(val)})"
             column = getattr(self.table, col)
             expr += f"{str(col)} = {column.dtype(val)} AND "
-        expr = re.sub(r'\s*AND\s*$', "", expr)
-        self.statement += f"WHERE {expr} " 
-        return self           
-    
+        expr = re.sub(r"\s*AND\s*$", "", expr)
+        self.statement += f"WHERE {expr} "
+        return self
+
     def _and(self, expr: str):
         """used to add a AND operator to a statement
 
@@ -838,8 +898,8 @@ class Select(Selectable):
             self: returns itself class NOT the data, use .all() or similar to get the data
         """
         self.statement += "AND " + expr + " "
-        return self  
-    
+        return self
+
     def _or(self, expr: str):
         """used to add a OR operator to a statement
 
@@ -850,8 +910,8 @@ class Select(Selectable):
             Database: returns itself class NOT the data, use .all() or similar to get the data
         """
         self.statement += "OR " + expr + " "
-        return self  
-    
+        return self
+
     def group(self, *args, having=""):
         """used to group data from a SQL statistical funtion
 
@@ -862,9 +922,8 @@ class Select(Selectable):
         if having != "":
             self.statement += "HAVING " + having + " "
         return self
-    
+
     def order(self, *args):
         """used to determine the order that data is returned"""
         self.statement += "ORDER BY " + ", ".join(args) + " "
         return self
-    
