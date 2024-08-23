@@ -8,7 +8,7 @@ likes(user_id, quote_id)
 comments(user_id, quote_id, comment)
 '''
 
-from utils import DatabaseManager, UserManager, QuoteManager
+from app.utils import DatabaseManager, UserManager, QuoteManager
 from hashlib import sha256
 
 dbm = DatabaseManager()
