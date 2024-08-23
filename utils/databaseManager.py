@@ -12,7 +12,7 @@ class DatabaseManager:
     def query(self, 
               query: str, 
               values: Tuple[Any, ...] | Dict[str, Any] = tuple()
-        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        ) -> List[Tuple[Any, ...]] | Exception | bool:
         """executes a query on the database, NOTE: query must have one and only one statement
         for security reasons, if you're planning on using a single statement in a query it is recommended
         to use query as if there is some SQLi vulnerability then they won't be able to execute a statement other than
@@ -33,7 +33,7 @@ class DatabaseManager:
     def multi_query(self, 
               query: str, 
               values: Tuple[Any, ...] | Dict[str, Any] = tuple()
-        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        ) -> List[Tuple[Any, ...]] | Exception | bool:
         """executes a query on the database
 
         :param query: query to execute
@@ -51,7 +51,7 @@ class DatabaseManager:
     def select(self, 
                query: str, 
               values: Tuple[Any, ...] | Dict[str, Any] = tuple()
-        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        ) -> List[Tuple[Any, ...]] | Exception | bool:
         '''
         Execute a select query on the database.
         :param query: The query to execute.
@@ -71,7 +71,7 @@ class DatabaseManager:
     def execute(self, 
                 query: str,
               values: Tuple[Any, ...] | Dict[str, Any] = tuple()
-        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        ) -> List[Tuple[Any, ...]] | Exception | bool:
         """executes a non-SELECT query
 
         :param query: SQL to execute
