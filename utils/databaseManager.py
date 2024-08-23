@@ -1,21 +1,57 @@
+from typing import Any, List, Tuple, Dict
+
+import sqlparse
+
 class DatabaseManager:
     def __init__(self):
         import sqlite3
         
         self.conn = sqlite3.connect('database.db', check_same_thread=False)
 
-    def query(self, query, values=None):
-        '''
-        Execute a query on the database.
-        :param query: The query to execute.
-        :param values: The values to insert into the query.
-        '''
+    # for security reasons, if you're planning on using a single statement in a query
+    def query(self, 
+              query: str, 
+              values: Tuple[Any, ...] | Dict[str, Any] = tuple()
+        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        """executes a query on the database, NOTE: query must have one and only one statement
+        for security reasons, if you're planning on using a single statement in a query it is recommended
+        to use query as if there is some SQLi vulnerability then they won't be able to execute a statement other than
+        the default statement. Principle of least privilege 
+
+        :param query: query to execute
+        :type query: str
+        :param values: parameters for the query, defaults to tuple()
+        :type values: tuple | dict, optional
+        :return: results if there are results, True if it's not a SELECT statement and is successful, Exception if something went wrong
+        :rtype: Any[List[Tuple[Any]], Exception, bool]
+        """
+        parsed = sqlparse.parse(query)
+        if len(parsed) > 1:
+            return False #TODO: decide a better return value
+        return self.multi_query(query, values)
+        
+    def multi_query(self, 
+              query: str, 
+              values: Tuple[Any, ...] | Dict[str, Any] = tuple()
+        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        """executes a query on the database
+
+        :param query: query to execute
+        :type query: str
+        :param values: parameters for the query, defaults to tuple()
+        :type values: tuple | dict, optional
+        :return: results if there are results, True if it's not a SELECT statement and is successful, Exception if something went wrong
+        :rtype: Any[List[Tuple[Any]], Exception, bool]
+        """
         if query.lower().startswith('select'):
             return self.select(query, values)
         else:
             return self.execute(query, values)
         
-    def select(self, query, values=None):
+    def select(self, 
+               query: str, 
+              values: Tuple[Any, ...] | Dict[str, Any] = tuple()
+        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
         '''
         Execute a select query on the database.
         :param query: The query to execute.
@@ -32,14 +68,19 @@ class DatabaseManager:
             except Exception as e:
                 return e
         
-    def execute(self, query, values=None):
-        '''
-        Execute a query on the database.
-        :param query: The query to execute.
-        :param values: The values to insert into the query.
-        '''
-        if values is None: values = ()
-        
+    def execute(self, 
+                query: str,
+              values: Tuple[Any, ...] | Dict[str, Any] = tuple()
+        ) -> Any[List[Tuple[Any, ...]], Exception, bool]:
+        """executes a non-SELECT query
+
+        :param query: SQL to execute
+        :type query: str
+        :param values: parameters for query, defaults to tuple()
+        :type values: Tuple | Dict, optional
+        :return: True if successful, Exception if something went wrong
+        :rtype: Any[bool, Exception]
+        """
         with self.conn:
             cursor = self.conn.cursor()
             try:
