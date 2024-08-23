@@ -1,0 +1,15 @@
+{% from 'bootstrap5/form.html' import render_form %}
+{% extends "template.html" %}
+{% block content %}
+<div class="row">
+<h1>Register</h1>
+</div>
+<div class="row">
+{{render_form(form)}}
+</div>
+<div clas="row">
+<p>
+Already have an account? <a href="{{url_for('accounts.login')}}">Login Here</a>
+</p>
+</div>
+{% endblock %}
