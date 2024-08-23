@@ -1,11 +1,69 @@
 <!DOCTYPE html>
+{% if "style" in session %}
+    {% if session["style"] == "dark" %}
+    <html lang="en" data-bs-theme="dark">
+    {% else %}
+    <html lang="en">
+    {% endif %}
+{% else %}
 <html lang="en">
+{% endif %}
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    {{ bootstrap.load_css() }}
+    <title>{% if title is defined %}{{title}}{% else %}Quotebook{% endif %}</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {{bootstrap.load_css()}}
     {{bootstrap.load_js()}}
     {% block head %}
     {% endblock head %}
 </head>
+<body>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<header class="container-fluid" style="padding: 0">
+    <nav class="navbar navbar-expand-sm" style="padding: 15px">
+        <div class="d-flex">
+            <h4 class="navbar-text">Quotebook</h4>
+            <ul class="navbar-nav"> 
+                <li class="nav-item"><a class="nav-link"></a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Quotes</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{url_for('quotes.home')}}">Home</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('quotes.all')}}">All Quotes</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('quotes.submit')}}">Submit a Quote</a></li>
+                    </ul>
+                </li>
+                {% if "user" in session %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('accounts.account')}}">My Account</a></li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('accounts.login')}}">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{url_for('accounts.register')}}">Register</a></li>
+                {% endif %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('chat.home')}}">Chat</a></li>
+                {# TODO: add link to admin page #}
+            </ul>
+        </div>
+        <div class="d-flex ms-auto">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Style</a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><form method="GET" class="dropdown-item" href=""><input type="hidden" value="light" name="style"><input class="nav-link" type="submit" value="light"></form></li>
+                        <li><form method="GET" class="dropdown-item" href=""><input type="hidden" value="dark" name="style"><input class="nav-link" type="submit" value="dark"></form></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+<div class="container">
 {% block content %}
 {% endblock content %}
+</div>
+</body>
 </html>
