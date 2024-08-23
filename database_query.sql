@@ -1,5 +1,5 @@
 CREATE TABLE `users` (
-`id` int UNIQUE PRIMARY KEY NOT NULL,
+`id` int PRIMARY KEY,
 `name` TEXT NOT NULL,
 `email` TEXT UNIQUE NOT NULL,
 `password_hash` TEXT NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE `users` (
 );
 
 CREATE TABLE `quotes` (
-`id` int UNIQUE PRIMARY KEY NOT NULL,
+`id` int PRIMARY,
 `author` TEXT DEFAULT 'Unknown',
 `year` TEXT NOT NULL,
 `quote` TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE `quotes` (
 );
 
 CREATE TABLE `reports` (
-`id` int UNIQUE PRIMARY KEY NOT NULL,
+`id` int PRIMARY KEY,
 `user_id` int,
 `quote_id` int,
 `reason` TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE `reports` (
 );
 
 CREATE TABLE `logs` (
-`id` int UNIQUE PRIMARY KEY NOT NULL,
+`id` int PRIMARY KEY,
 `user_id` int,
 `action` TEXT,
 `message` TEXT
