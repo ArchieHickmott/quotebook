@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS quotes;
 DROP TABLE IF EXISTS reports;
 DROP TABLE IF EXISTS logs;
 DROP TABLE IF EXISTS likes;
+DROP TABLE IF EXISTS comments;
 
 
 -- Create the tables in the database
@@ -50,6 +51,7 @@ CREATE TABLE `comments` (
 `quote_id` int,
 `comment` TEXT
 );
+/*
 ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `reports` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
 ALTER TABLE `logs` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
