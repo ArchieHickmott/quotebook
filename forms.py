@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField, SubmitField, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, ValidationError, HiddenField, SelectField
 from wtforms.validators import InputRequired, DataRequired, Email
 
 # form displayed when logging in
@@ -30,16 +30,15 @@ class UpdateDataForm(FlaskForm):
     password = PasswordField("Password", [InputRequired("please enter your password")], render_kw={"placeholder": "Password", "required":True})
     # recaptcha = RecaptchaField()
     submit = SubmitField("Update", render_kw={"class": "btn btn-light"})
-
-class ConfirmDelete(FlaskForm):
-    submit = SubmitField("DELTE ACCOUNT", render_kw={"class": "btn btn-warning"})
-
 class QuoteForm(FlaskForm):
     name = StringField("Name", [InputRequired()])
     date = StringField("Date")
     quote = StringField("Quote", [InputRequired()])
     submit = SubmitField("submit quote", render_kw={"class": "button button-dark"})
 
-class SearchForm(FlaskForm):
-    search = StringField("search", [InputRequired()])
-    submit = SubmitField("search", render_kw={"class": "button button-dark"})
+class ReportForm(FlaskForm):
+    quoteid = HiddenField()
+    userid = HiddenField()
+    reason = SelectField("reason", [InputRequired()], choices=["personal reasons", "excessive", "not funny/whimsical", "repeated quote", "not a quote", "other"])
+    detials = StringField("details")
+    submit = SubmitField("report")

@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field, astuple
+from fortifysql import Database
+from typing import ClassVar
 
 @dataclass(frozen=True, order=True, init=False)
 class Quote:
@@ -13,6 +15,10 @@ class Quote:
            and set name=quoteid, year=name etc. this is for compatibility with database
         """
         if isinstance(quoteid, str):
+            """
+            if quoteid is a string then it is assumed that it's being created without an id
+            kinda like a pseudo optional argument            
+            """
             object.__setattr__(self, "quoteid", None)
             object.__setattr__(self, "name", quoteid)
             object.__setattr__(self, "year", name)
@@ -32,3 +38,19 @@ class Quote:
             if x is not None:
                 yield x
                 
+@dataclass
+class Report:
+    userid: int
+    quoteid: int
+    reason: str
+    details: str
+    status: int = 0
+    
+    def submit(self, db: Database):
+        query = db.query("SELECT max(reportid) FROM reports")
+        if query:
+            reportid = 1
+        reportid = int(query[0][0]) + 1
+        db.query(f"INSERT INTO reports VALUES ({reportid}, {self.userid}, {self.quoteid}, ?, ?, 0)",
+                    (self.reason, self.details))
+        

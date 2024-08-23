@@ -19,37 +19,38 @@ try:
     from wtforms.validators import InputRequired
 except ImportError as e:
     print(e)
-    yn = input("Would you like to install the required libraries? (Y,n): ")
+    yn = input("Would you like to install the required libraries? (y/n): ")
     if yn.lower() == "y":
         os.system("pip install -r requirements.txt")
 
 # Local Imports
 from users import User
-from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete, QuoteForm, SearchForm
+from forms import LoginForm, RegisterForm, UpdateDataForm, ConfirmDelete, QuoteForm, ReportForm
 from app_errors import AuthError, AppError, error_codes
 from config import create_app
 from data_classes import Quote
  
 app, db, crypt = create_app()
 
+# NOTE: userid and quoteid are safe variables, no need to parameterize
 def user_has_liked(userid, quoteid) -> bool:
     count_likes(quoteid)
-    if db.likes.get().filter(quoteid=int(quoteid), userid=int(userid)).all():
+    if db.query(f"SELECT * FROM likes WHERE quoteid={quoteid} AND userid={userid}"):
         return True
     return False    
 
 def count_likes(quoteid):
     num_likes = db.query(f"SELECT count(quoteid) FROM likes WHERE quoteid={quoteid}")[0][0]
-    db.quotes.replace(f"quoteid={quoteid}", numlikes=num_likes)
+    db.query(f"UPDATE likes WHERE quoteid={quoteid} WHERE numlikes={num_likes}")
 
 def like_quote(quoteid, userid):
     if user_has_liked(userid, quoteid):
         return
-    db.likes.append(quoteid=int(quoteid), userid=int(userid))
+    db.query(f"INSERT INTO likes VALUES ({quoteid}, {userid})")
     count_likes(quoteid)
     
 def unlike_quote(quoteid, userid):
-    db.likes.remove(quoteid=int(quoteid), userid=int(userid))
+    db.query(f"DELETE FROM likes WHERE quoteid={quoteid} AND userid={userid}")
     count_likes(quoteid)
 
 @app.before_request
@@ -77,8 +78,8 @@ def submit():
         if len(quote) > 300 or len(name) > 300 or len(date) > 300:
             form.quote.errors.append(ValueError("too long"))
         else:
-            db.quotes.append(name=name, year=date, quote=quote)
-    results = db.quotes("name", "year", "quote")
+            db.query("INSERT INTO quotes (name, year, quote) VALUES (?, ?, ?)", (name, date, quote))
+    results = db.query("SELECT name, year, quotes FROM quotes")
     quotes = []
     for quote in results:
         quotes.append(Quote(*quote))
@@ -86,12 +87,14 @@ def submit():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    if "user" in session:
+        return redirect(url_for("home"))
     if db.query("SELECT count(*) FROM quotes")[0][0] == 0:
         quote = Quote("No quotes found", "0000", "No quotes found")
         return render_template("index.html", quote=quote, quoteid=0, best_quote=quote)
     
     quote = db.query(f"SELECT name, year, quote FROM quotes ORDER BY RANDOM() LIMIT 1")[0] 
-    best_quote = db.quotes.get("name", "year", "quote").order("numlikes DESC").limit(1)[0]
+    best_quote = db.query("SELECT name, year, quote FROM quotes ORDER BY numlikes DESC LIMIT 1")[0]
     
     quote = Quote(*quote)
     best_quote = Quote(*best_quote)
@@ -101,7 +104,7 @@ def index():
 @app.route("/quotes", methods=["GET", "POST"])
 def quotes():
     if not "user" in session:
-        results = db.quotes.get("name", "year", "quote", "numlikes").order("numlikes DESC").all()
+        results = db.query("SELECT name, year, quote, numlikes FROM quotes ORDER BY numlikes DESC")
         quotes = []
         for quote in results:
             quotes.append(Quote(*quote))
@@ -144,7 +147,28 @@ def search():
         results = db.query(sql, tuple("%" + search.strip() + "%" for _ in range(3)))
         return render_template("quotes.html", user=user, quotes=results, id=int(user.id()))
     return redirect(url_for("/"))
- 
+
+@app.route("/report", methods=["GET", "POST"])
+def report():
+    if not "user" in session:
+        return redirect(url_for("login"))
+    user = User.load(**session["user"])
+    form: ReportForm = ReportForm()
+    extra = ""
+    if form.validate_on_submit():
+        form.reason.data = None
+        form.detials.data = None
+        extra="submitted successfully"
+    if request.args.get("quoteid"):
+        quoteid = int(request.args.get("quoteid"))
+        form.userid.data = user.id()
+        form.quoteid.data = quoteid
+        quote = db.query(f"SELECT name, year, quote WHERE quoteid={quoteid}")[0]
+        quote = Quote(quoteid, *quote)
+        return render_template("report.html", form=form, quote=quote, extra=extra)        
+    else:
+        return redirect(url_for("index"))
+
 # MARK: Login Page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -155,21 +179,18 @@ def login():
         # get relevent user data
         email = form.email.data
         password = form.password.data
-        id = db.users.get(db.users.userid).filter(email=email).first()
-        # log in algorithm
+        id = db.query("SELECT userid FROM users WHERE email=?", (email,))[0]
         try:
             id = id[0]
             user = User(id, password)
-        except TypeError: form.submit.errors.append("Something went wrong, please try again. 😢")
+        except TypeError: form.password.errors.append("Something went wrong, please try again. 😢")
         except AuthError as e:
             app.logger.warning(f"failed loggin for {id}")
-            db.log_failed_logins.append(userid=id, 
-                                        ip=request.remote_addr, 
-                                        time=datetime.now(), 
-                                        error_message=str(e))
-            form.submit.errors.append("Something went wrong, please try again. 😢")
+            db.query(f"INSERT INTO log_failed_logins VALUES ({id}, ?, ?, ?)", 
+                                (request.remote_addr, datetime.now(), str(e)))
+            form.password.errors.append("Something went wrong, please try again. 😢")
         else: # SUCCESSFUL LOGIN
-            db.log_logins.append(userid=id, ip=request.remote_addr, time=datetime.now())
+            db.query(f"INSERT INTO log_logins VALUES ({id}, ?, ?)", (request.remote_addr, datetime.now()))
             session["user"] = vars(user)
             return redirect(url_for('home'))
     return render_template("login.html", form=form)
@@ -186,7 +207,7 @@ def register():
         email = form.email.data 
         password = form.password.data
         
-        if db.users.get("email").filter(email=email).first():
+        if db.query("SELECT email FROM users WHERE email=?", (email,))[0]:
             form.email.errors.append(ValueError("email is already in use"))
             return render_template("register.html", form=form)
         
@@ -221,75 +242,6 @@ def logout():
     if "user" in session:
         session.pop("user")
     return redirect(url_for("login"))
-
-@app.route("/delete", methods=["GET", "POST"])
-def delete_account():
-    form = ConfirmDelete()
-    if not "user" in session:
-        return redirect(url_for("index"))
-    user = User.load(**session["user"])
-    if not user.is_logged_in():
-        return redirect(url_for("index"))
-    if not form.validate_on_submit():
-        return render_template("confirm_delete.html", form=form)
-    id = user.id()
-    session.pop("user")
-    db.log_detail_changes.remove(userid=id)
-    db.log_failed_logins.remove(userid=id)
-    db.log_logins.remove(userid=id)
-    db.passwords.remove(userid=id)
-    db.users.remove(userid=id)
-    return redirect(url_for("login"))
-
-# MARK: Admin
-@app.route('/admin')
-def admin():
-    # office_open = dt.time(9, 0)
-    # office_close = dt.time(17, 0)
-    # current_time = datetime.now().time()
-    # if not office_open <= current_time <= office_close:
-        # app.logger.warning("attempted access of admin portal outside of office hours")
-        # return "Admin portal can only accessed during office hours"
-    if not "user" in session:
-        return redirect(url_for('login'))
-    users = db.users
-    user = User.load(**session["user"])
-    permission_level = users.get("PLEVEL").filter(userid=user.id()).first()[0]
-    if (not isinstance(permission_level, int)) or permission_level < 0:
-        app.logger.critical("There exists a user with an invalid permission level")
-        raise AppError("Invalid permission level")
-    requested_user_data = request.args.get("user")
-    if requested_user_data and permission_level != 0:
-        id = requested_user_data
-        return render_template("user_data_lookup.html", 
-                                id=requested_user_data,
-                                first_name=users.get(users.first_name).filter(userid=id).first()[0],
-                                last_name=users.get(users.last_name).filter(userid=id).first()[0],
-                                email=users.get(users.email).filter(userid=id).first()[0],
-                                date_created=users.get(users.date_created).filter(userid=id).first()[0],
-                                plevel=users.get(users.PLEVEL).filter(userid=id).first()[0],
-                                logins=db.log_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                                fails=db.log_failed_logins.get("ip", "time").filter(userid=id).order("time DESC").all(),
-                              )
-    if not user.is_logged_in():
-        return redirect(url_for("login")) 
-    if permission_level != 0:
-        users_table = users.get().all()
-        fails = db.query(f"""SELECT fails.userid, users.email, fails.ip, fails.time
-                            FROM log_failed_logins as fails, users WHERE fails.userid = users.userid
-                            LIMIT 5""")
-        logins = db.query(f"""SELECT fails.userid, users.email, fails.ip, fails.time
-                            FROM log_logins as fails, users WHERE fails.userid = users.userid
-                            ORDER BY time DESC
-                            LIMIT 5""")
-        return render_template('admin.html', 
-                                user=user, 
-                                users=users_table, 
-                                fails=fails, 
-                                logins=logins,
-                                plevel = permission_level, 
-                              )
-    return "NOT ADMIN", 401
 
 @app.errorhandler(Exception)
 def errors(e: Exception):

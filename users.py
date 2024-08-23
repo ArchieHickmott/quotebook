@@ -30,6 +30,7 @@ class User:
     __is_logged_in = False
     
     def __init__(self, id: str, password: str=""):
+        """DO NOT USE __init__ FOR LOADING USER FROM SESSION, USE User.load(**session["user"])"""
         info = self.db.users.get().filter(userid=id).first() 
         if info == []: UserError("User does not exist")
         self.__id = id
