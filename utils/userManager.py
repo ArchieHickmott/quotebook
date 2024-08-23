@@ -45,7 +45,7 @@ class UserManager:
         '''
         for item in [name, email, password_hash, plevel]:
             if item is None:
-                item = self.get_user(user_id)[item]
+                item = self.get_user(user_id)[[name, email, password_hash, plevel].index(item)]
         
         self.dbm.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ? ', (name, email, password_hash, user_id))
 

@@ -23,6 +23,18 @@ print(dbm.query('SELECT * FROM quotes'))
 for i in ['Alice', 'Bob', 'Charlie']:
     um.create_user(i, f"{i}@email.com", sha256('password_hash'.encode()).hexdigest())
 
+# change the email of user with id 1
+um.update_user(1, email='new_email@email.com')
+
+# delete the user with id 2
+um.delete_user(2)
+
+# create a new user
+um.create_user('David', 'david@email.com', sha256('password_hash'.encode()).hexdigest())
+
+# print the user with id 3
+print(um.get_user(3))
+
 # Check the data was inserted correctly
 print(dbm.query('SELECT * FROM users'))
 
