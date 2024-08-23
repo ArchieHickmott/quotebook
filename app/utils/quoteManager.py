@@ -1,4 +1,4 @@
-from utils import DatabaseManager
+from .databaseManager import db 
 from datetime import datetime
 
 '''
@@ -12,15 +12,15 @@ comments(user_id, quote_id, comment)
 '''
 
 class QuoteManager:
-    def __init__(self, dbm):
-        self.dbm = dbm
+    def __init__(self):
+        self.db = db
     
     def get_quote(self, quote_id: int):
         '''
         Get a quote from the database.
         :param quote_id: The ID of the quote.
         '''
-        return self.dbm.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
+        return self.db.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
 
     def create_quote(self, author: str, quote: str, year: int=datetime.now().year):
         '''
@@ -29,7 +29,7 @@ class QuoteManager:
         :param year: The year of the quote.
         :param quote: The quote.
         '''
-        return self.dbm.query('INSERT INTO quotes (author, year, quote, likes) VALUES (?, ?, ?, ?)', (author, year, quote, 0))
+        return self.db.query('INSERT INTO quotes (author, year, quote, likes) VALUES (?, ?, ?, ?)', (author, year, quote, 0))
     
     def update_quote(self, quote_id: int, author: str=None, quote: str=None, year: int=None):
         '''
@@ -43,16 +43,16 @@ class QuoteManager:
             if item is None:
                 item = self.get_quote(quote_id)[[author, quote, year].index(item)]
         
-        self.dbm.query('UPDATE quotes SET author = ?, quote = ?, year = ? WHERE id = ? ', (author, quote, year, quote_id))
+        self.db.query('UPDATE quotes SET author = ?, quote = ?, year = ? WHERE id = ? ', (author, quote, year, quote_id))
 
-        return self.dbm.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
+        return self.db.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
     
     def delete_quote(self, quote_id: int):
         '''
         Delete a quote from the database.
         :param quote_id: The ID of the quote.
         '''
-        self.dbm.query('DELETE FROM quotes WHERE id = ?', (quote_id,))
+        self.db.query('DELETE FROM quotes WHERE id = ?', (quote_id,))
 
     def like_quote(self, user_id: int, quote_id: int):
         '''
@@ -60,7 +60,7 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.dbm.query('INSERT INTO likes (user_id, quote_id) VALUES (?, ?)', (user_id, quote_id))
+        return self.db.query('INSERT INTO likes (user_id, quote_id) VALUES (?, ?)', (user_id, quote_id))
     
     def unlike_quote(self, user_id: int, quote_id: int):
         '''
@@ -68,7 +68,7 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.dbm.query('DELETE FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
+        return self.db.query('DELETE FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
     
     def get_liked(self, user_id: int, quote_id: int):
         '''
@@ -76,12 +76,12 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.dbm.query('SELECT * FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
+        return self.db.query('SELECT * FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
     
     def search(self, query: str):
         '''
         Search for a quote.
         :param query: The query to search for.
         '''
-        return self.dbm.query('SELECT * FROM quotes WHERE quote LIKE ?', (f'%{query}%',))
+        return self.db.query('SELECT * FROM quotes WHERE quote LIKE ?', (f'%{query}%',))
         

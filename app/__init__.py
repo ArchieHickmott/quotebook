@@ -1,28 +1,24 @@
 from random import randbytes
+import datetime as dt
 
-from flask import Flask, redirect, url_for
+from flask import Flask, render_template
+from flask_bootstrap import Bootstrap5
 
-from accounts import blueprint as accounts
-from admin import blueprint as admin
-from chat import blueprint as chat
-from quotes import blueprint as quotes
+from app.accounts import blueprint as account
+from app.admin import blueprint as admin
+from app.chat import blueprint as chat
+from app.quotes import blueprint as quotes
+from app.utils import db
 
 app = Flask(__name__)
-
-app.register_blueprint(accounts)
-app.register_blueprint(admin)
-app.register_blueprint(chat)
-app.register_blueprint(quotes)
-
+app = Flask(__name__)
+app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
+bootstrap = Bootstrap5(app)
 app.config["SECRET_KEY"] = randbytes(128)
-# app config
-# .
-# .
-# .
 
 @app.route("/")
-def index():
-    return redirect(url_for("quotes.index"))
+def landing():
+    return render_template("landing.html")
 
 if __name__ == "__main__":
     app.run()

@@ -3,10 +3,10 @@ from typing import Any, List, Tuple, Dict
 import sqlparse
 
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self, path):
         import sqlite3
         
-        self.conn = sqlite3.connect('database.db', check_same_thread=False)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
 
     # for security reasons, if you're planning on using a single statement in a query
     def query(self, 
@@ -98,3 +98,5 @@ class DatabaseManager:
             cursor = self.conn.cursor()
             with open('database_query.sql', 'r') as f:
                 cursor.executescript(f.read())
+
+db = DatabaseManager("database.db")
