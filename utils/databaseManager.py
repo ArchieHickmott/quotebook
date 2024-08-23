@@ -21,14 +21,16 @@ class DatabaseManager:
         :param query: The query to execute.
         :param values: The values to insert into the query.
         '''
+        if values is None: values = ()
+        
         with self.conn:
             cursor = self.conn.cursor()
 
             try:
                 cursor.execute(query, values)
                 return cursor.fetchall()
-            except:
-                return False
+            except Exception as e:
+                return e
         
     def execute(self, query, values=None):
         '''
@@ -36,14 +38,16 @@ class DatabaseManager:
         :param query: The query to execute.
         :param values: The values to insert into the query.
         '''
+        if values is None: values = ()
+        
         with self.conn:
             cursor = self.conn.cursor()
             try:
                 cursor.execute(query, values)
                 cursor.connection.commit()
                 return True
-            except:
-                return False
+            except Exception as e:
+                return e
             
     def reset_db(self):
         '''
