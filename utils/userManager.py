@@ -10,8 +10,7 @@ comments(user_id, quote_id, comment)
 
 from time import time
 
-if __name__ == '__main__':
-    from utils import DatabaseManager
+from utils import DatabaseManager
 
 class UserManager:
     def __init__(self, dbm: DatabaseManager):
@@ -32,7 +31,9 @@ class UserManager:
         :param password_hash: The password hash of the user.
         '''
         
-        self.dbm.query('INSERT INTO users (name, email, password_hash, created_at, plevel) VALUES (?, ?, ?, ?, ?)', (name, email, password_hash, int(time()), 1))
+        print(self.dbm.query('INSERT INTO users (name, email, password_hash, created_at, plevel) VALUES (?, ?, ?, ?, ?)', (name, email, password_hash, int(time()), 1)))
+
+        return self.dbm.query('SELECT * FROM users WHERE email = ?', (email,))[0]
 
     def update_user(self, user_id: int, name: str=None, email: str=None, password_hash: str=None, plevel: int=None):
         '''
@@ -46,7 +47,9 @@ class UserManager:
             if item is None:
                 item = self.get_user(user_id)[item]
         
-        self.dbm.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?', (name, email, password_hash, user_id))
+        self.dbm.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ? ', (name, email, password_hash, user_id))
+
+        return self.dbm.query('SELECT * FROM users WHERE id = ?', (user_id,))[0]
 
     def delete_user(self, user_id: int):
         '''
@@ -54,6 +57,8 @@ class UserManager:
         :param user_id: The ID of the user.
         '''
         self.dbm.query('DELETE FROM users WHERE id = ?', (user_id,))
+
+        return True
     
 
     

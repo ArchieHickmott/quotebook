@@ -8,9 +8,11 @@ likes(user_id, quote_id)
 comments(user_id, quote_id, comment)
 '''
 
-from utils import DatabaseManager
+from utils import DatabaseManager, UserManager
+from hashlib import sha256
 
 dbm = DatabaseManager()
+um = UserManager(dbm)
 
 dbm.reset_db()
 
@@ -18,7 +20,8 @@ dbm.reset_db()
 print(dbm.query('SELECT * FROM quotes'))
 
 # Insert data into the users table
-dbm.query('INSERT INTO users (id, name, email, password_hash, created_at, plevel) VALUES (?, ?, ?, ?, ?, ?)', ('0', 'test', 'test@email.com', 'password', '0', 1))
+for i in ['Alice', 'Bob', 'Charlie']:
+    um.create_user(i, f"{i}@email.com", sha256('password_hash'.encode()).hexdigest())
 
 # Check the data was inserted correctly
 print(dbm.query('SELECT * FROM users'))
