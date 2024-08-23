@@ -1,5 +1,14 @@
+-- Drop the tables that exist in the database
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS quotes;
+DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS logs;
+DROP TABLE IF EXISTS likes;
+
+
+-- Create the tables in the database
 CREATE TABLE `users` (
-`id` int PRIMARY KEY,
+`id` int UNIQUE PRIMARY KEY NOT NULL,
 `name` TEXT NOT NULL,
 `email` TEXT UNIQUE NOT NULL,
 `password_hash` TEXT NOT NULL,
@@ -8,7 +17,7 @@ CREATE TABLE `users` (
 );
 
 CREATE TABLE `quotes` (
-`id` int PRIMARY,
+`id` int UNIQUE PRIMARY KEY NOT NULL,
 `author` TEXT DEFAULT 'Unknown',
 `year` TEXT NOT NULL,
 `quote` TEXT NOT NULL,
@@ -16,7 +25,7 @@ CREATE TABLE `quotes` (
 );
 
 CREATE TABLE `reports` (
-`id` int PRIMARY KEY,
+`id` int UNIQUE PRIMARY KEY NOT NULL,
 `user_id` int,
 `quote_id` int,
 `reason` TEXT NOT NULL,
@@ -25,7 +34,7 @@ CREATE TABLE `reports` (
 );
 
 CREATE TABLE `logs` (
-`id` int PRIMARY KEY,
+`id` int UNIQUE PRIMARY KEY NOT NULL,
 `user_id` int,
 `action` TEXT,
 `message` TEXT
@@ -36,8 +45,15 @@ CREATE TABLE `likes` (
 `quote_id` int
 );
 
+CREATE TABLE `comments` (
+`user_id` int,
+`quote_id` int,
+`comment` TEXT
+);
 ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `reports` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
 ALTER TABLE `logs` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `likes` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
+ALTER TABLE `comments` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `comments` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);

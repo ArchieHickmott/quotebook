@@ -51,11 +51,5 @@ class DatabaseManager:
         '''
         with self.conn:
             cursor = self.conn.cursor()
-            # drop all tables
-            cursor.execute('DROP TABLE IF EXISTS users')
-            cursor.execute('DROP TABLE IF EXISTS quotes')
-            cursor.execute('DROP TABLE IF EXISTS reports')
-            cursor.execute('DROP TABLE IF EXISTS logs')
-            cursor.execute('DROP TABLE IF EXISTS likes')
             with open('database_query.sql', 'r') as f:
                 cursor.executescript(f.read())

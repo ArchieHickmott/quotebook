@@ -100,9 +100,16 @@ CREATE TABLE `likes` (
 `quote_id` int
 );
 
+CREATE TABLE `comments` (
+`user_id` int,
+`quote_id` int,
+`comment` TEXT
+);
 ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `reports` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
 ALTER TABLE `logs` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 ALTER TABLE `likes` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
+ALTER TABLE `comments` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `comments` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
 ```
