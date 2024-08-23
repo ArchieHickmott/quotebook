@@ -8,11 +8,12 @@ likes(user_id, quote_id)
 comments(user_id, quote_id, comment)
 '''
 
-from utils import DatabaseManager, UserManager
+from utils import DatabaseManager, UserManager, QuoteManager
 from hashlib import sha256
 
 dbm = DatabaseManager()
 um = UserManager(dbm)
+qm = QuoteManager(dbm)
 
 dbm.reset_db()
 
@@ -38,5 +39,26 @@ print(um.get_user(3))
 # Check the data was inserted correctly
 print(dbm.query('SELECT * FROM users'))
 
-# reset the database
-dbm.reset_db()
+# add a quote
+for i in range(10):
+    qm.create_quote(f'Author {i}', f'Quote {i}')
+
+# list all quotes
+print(qm.search(""))
+
+# like a quote
+qm.like_quote(1, 1)
+
+# update a quote
+qm.update_quote(2, author='New Author', quote='New Quote 1')
+
+# delete a quote
+qm.delete_quote(3)
+
+# search for quotes with "1" in them
+print(qm.search('1'))
+
+
+
+
+
