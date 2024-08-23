@@ -6,6 +6,8 @@ from random import randint, randbytes
 import json
 import os
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 # External Imports
 try:
     from flask import render_template, redirect, url_for, request, session
