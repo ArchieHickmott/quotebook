@@ -1,16 +1,19 @@
 class AppError(Exception): ...
 
+
 class UserError(AppError): ...
 
+
 class AuthError(UserError): ...
+
 
 class DatabaseIntegrityError(AppError):
     def __init__(self, msg, e) -> None:
         self.e = e
         super().__init__(msg, e)
 
-error_codes = \
-{
+
+error_codes = {
     # HTTP exceptions like 4XX
     400: "bad request",
     401: "permission denied",
@@ -39,12 +42,10 @@ error_codes = \
     426: "change protocols",
     429: "DOS is bad please dont use it",
     451: "the government is here",
-
     # HTTP exception like 5XX
     500: "Server is broken, blame the back-end devs",
     501: "We're not up to making this yet",
     503: "Boggle is down for maintanence",
-
     # ELSE like case
-    000: "" 
+    000: "",
 }
