@@ -16,4 +16,3 @@ This route allows a user to submit their own quote to the database, including au
 - [x] Added base level functionality to the /home route.
 - [x] Added base level functionality to the /submit route.
 - [ ] Added functionality to the /all route to allow users to search for quotes by author, year, or quote.
-- [ ] Added functionality to the /all route to allow users to sort quotes by author, year, or quote.

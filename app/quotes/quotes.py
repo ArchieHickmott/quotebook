@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
 
@@ -25,6 +25,29 @@ def home():
 def all():
     quotes = qm.search("", order_by="likes DESC")
     return render_template("all.html", quotes=quotes)
+
+@blueprint.route("/search")
+def search():
+    if request.args.get("query"):
+        query = request.args.get("query")
+    else:
+        query = ""
+    if request.args.get("field"):
+        field = request.args.get("field")
+        if not field in ["name", "year", "quote", "author"]: field=None
+        if field == "name": field = "author"
+    else:
+        field = None
+    if request.args.get("order"):
+        order = request.args.get("order")
+        if order == "default": order = None
+        if order == "name": order = "author"
+    else:
+        order = None
+    print(query, field, order, sep=" ")
+    quotes = qm.search(query, field, order)
+    print(quotes)
+    return render_template("search.html", quotes=quotes)
 
 @blueprint.route("/submit", methods=["GET", "POST"])
 def submit():

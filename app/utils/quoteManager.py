@@ -98,14 +98,15 @@ class QuoteManager:
         '''
         return self.db.query('SELECT * FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
     
-    def search(self, query: str, search_field: str="quote", order_by: str=None):
+    def search(self, query: str, search_field: str=None, order_by: str=None):
         '''
         Search for a quote.
         :param query: The query to search for.
         '''
         if order_by is None: order_by = "likes DESC"
         if query == "": quotes = self.db.query(f'SELECT * FROM quotes ORDER BY {order_by}')
-        else: quotes = self.db.query(f'SELECT * FROM quotes WHERE ? LIKE ? ORDER BY {order_by}', (search_field, f'%{query}%'))
+        elif search_field: quotes = self.db.query(f'SELECT * FROM quotes WHERE {search_field} LIKE ? ORDER BY {order_by}', (f'%{query}%',))
+        else: quotes = self.db.query(f'SELECT * FROM quotes WHERE author LIKE ? OR year LIKE ? OR quote LIKE ? ORDER BY {order_by}', tuple(f'%{query}%' for _ in range(3)))
         
         quotes = [i[1:] for i in quotes]
         return quotes
