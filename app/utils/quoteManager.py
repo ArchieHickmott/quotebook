@@ -103,9 +103,9 @@ class QuoteManager:
         Search for a quote.
         :param query: The query to search for.
         '''
-        if order_by is None: order_by = "likes"
-        if query == "": quotes = self.db.query('SELECT * FROM quotes ORDER BY ? DESC', (order_by,))
-        else: quotes = self.db.query('SELECT * FROM quotes WHERE ? LIKE ? ORDER BY ? DESC', (search_field, f'%{query}%', order_by))
+        if order_by is None: order_by = "likes DESC"
+        if query == "": quotes = self.db.query(f'SELECT * FROM quotes ORDER BY {order_by}')
+        else: quotes = self.db.query(f'SELECT * FROM quotes WHERE ? LIKE ? ORDER BY {order_by}', (search_field, f'%{query}%'))
         
         quotes = [i[1:] for i in quotes]
         return quotes

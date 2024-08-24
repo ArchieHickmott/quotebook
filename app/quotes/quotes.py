@@ -23,7 +23,7 @@ def home():
 
 @blueprint.route("/all")
 def all():
-    quotes = qm.search("")
+    quotes = qm.search("", order_by="likes DESC")
     return render_template("all.html", quotes=quotes)
 
 @blueprint.route("/submit", methods=["GET", "POST"])
