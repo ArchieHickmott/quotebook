@@ -9,3 +9,11 @@ This route shows a user the best quote, the quote of the day, and a random quote
 
 ### /quotes/submit
 This route allows a user to submit their own quote to thhe database, including author, year, and the quote.
+
+## Progress
+- [x] Added all routes and template files.
+- [x] Added base level functionality to the /all route.
+- [x] Added base level functionality to the /home route.
+- [x] Added base level functionality to the /submit route.
+- [ ] Added functionality to the /all route to allow users to search for quotes by author, year, or quote.
+- [ ] Added functionality to the /all route to allow users to sort quotes by author, year, or quote.
