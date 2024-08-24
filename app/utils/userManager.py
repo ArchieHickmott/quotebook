@@ -20,7 +20,8 @@ class UserManager:
         Get a user from the database.
         :param user_id: The ID of the user.
         '''
-        return self.db.query('SELECT * FROM users WHERE id = ?', (user_id,))[0]
+        user = self.db.query('SELECT * FROM users WHERE id = ?', (user_id,))[0]
+        return {"id": user[0], "name": user[1], "email": user[2], "hash": user[3], "created": user[4], "style": user[5], "plevel": user[6]}
 
     def create_user(self, name: str, email: str, password_hash: str):
         '''
@@ -34,7 +35,7 @@ class UserManager:
 
         return self.db.query('SELECT * FROM users WHERE email = ?', (email,))[0]
 
-    def update_user(self, user_id: int, name: str=None, email: str=None, password_hash: str=None, plevel: int=None):
+    def update_user(self, user_id: int, name: str=None, email: str=None, password_hash: str=None, plevel: int=None, style: str=None):
         '''
         Update a user in the database.
         :param user_id: The ID of the user.
@@ -42,7 +43,9 @@ class UserManager:
         :param email: The email of the user.
         :param password_hash: The password hash of the user.
         '''
-        for item in [name, email, password_hash, plevel]:
+        if not (style == "dark" or style == "light"):
+            style = None
+        for item in [name, email, password_hash, plevel, style]:
             if item is None:
                 item = self.get_user(user_id)[[name, email, password_hash, plevel].index(item)]
         

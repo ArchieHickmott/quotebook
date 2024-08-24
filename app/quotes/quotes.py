@@ -32,6 +32,9 @@ def submit():
     quotes = qm.search("")
     # TODO: make form functional
     if form.validate_on_submit():
-        qm.create_quote(form.author.data, form.year.data, form.quote.data)
-    
+        fields = (form.author, form.year, form.quote)
+        qm.create_quote(*(field.data for field in fields))
+        quotes = qm.search("", order_by="id DESC")
+        for field in fields:
+            setattr(field, "data", None)
     return render_template("submit.html", form=form, quotes=quotes)

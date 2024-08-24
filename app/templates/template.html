@@ -6,7 +6,15 @@
     <html lang="en">
     {% endif %}
 {% else %}
-<html lang="en">
+    {% if "user" in session %}
+    {% if um.get_user(session["user"])["style"] == "dark" %}
+    <html lang="en" data-bs-theme="dark">
+    {% else %}
+    <html lang="en">
+    {% endif %}  
+    {% else %}
+    <html lang="en">
+    {% endif %}
 {% endif %}
 <head>
     <meta charset="utf-8">
