@@ -8,13 +8,14 @@ DROP TABLE IF EXISTS comments;
 
 
 -- Create the tables in the database
-CREATE TABLE `users` (
-`id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`name` TEXT NOT NULL,
-`email` TEXT UNIQUE NOT NULL,
-`password_hash` TEXT NOT NULL,
-`created_at` INTEGER NOT NULL,
-`plevel` INTEGER NOT NULL
+CREATE TABLE users (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT NOT NULL,
+email TEXT UNIQUE NOT NULL,
+password_hash TEXT NOT NULL,
+created_at INTEGER NOT NULL,
+style TEXT DEFAULT 'light',
+plevel INTEGER NOT NULL
 );
 
 CREATE TABLE `quotes` (
@@ -27,8 +28,8 @@ CREATE TABLE `quotes` (
 
 CREATE TABLE `reports` (
 `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`user_id` INTEGER,
-`quote_id` INTEGER,
+`user_id` INTEGER REFERENCES users (id),
+`quote_id` INTEGER REFERENCES quotes (id),
 `reason` TEXT NOT NULL,
 `details` TEXT,
 `status` INTEGER
@@ -36,26 +37,18 @@ CREATE TABLE `reports` (
 
 CREATE TABLE `logs` (
 `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`user_id` INTEGER,
+`user_id` INTEGER REFERENCES users (id),
 `action` TEXT,
 `message` TEXT
 );
 
 CREATE TABLE `likes` (
-`user_id` INTEGER,
-`quote_id` INTEGER
+`user_id` INTEGER REFERENCES users (id),
+`quote_id` INTEGER REFERENCES quotes (id)
 );
 
 CREATE TABLE `comments` (
-`user_id` INTEGER,
-`quote_id` INTEGER,
+`user_id` INTEGE REFERENCES users(id),
+`quote_id` INTEGER REFERENCES quotes (id),
 `comment` TEXT
 );
-/*
-ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-ALTER TABLE `reports` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
-ALTER TABLE `logs` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-ALTER TABLE `likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-ALTER TABLE `likes` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
-ALTER TABLE `comments` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-ALTER TABLE `comments` ADD FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`);
