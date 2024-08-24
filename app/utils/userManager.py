@@ -9,11 +9,10 @@ comments(user_id, quote_id, comment)
 '''
 
 from time import time
-
 from .databaseManager import db, DatabaseManager
 
 class UserManager:
-    def __init__(self, db):
+    def __init__(self):
         self.db: DatabaseManager = db
 
     def get_user(self, user_id: int):
