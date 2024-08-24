@@ -23,7 +23,7 @@ app.register_blueprint(quotes)
 
 @app.before_request
 def before():
-    if not "mode" in session:
+    if not "style" in session:
         session["style"] = "light"
     if request.args.get("style"):
         session["style"] = request.args.get("style")
