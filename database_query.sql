@@ -9,46 +9,46 @@ DROP TABLE IF EXISTS comments;
 
 -- Create the tables in the database
 CREATE TABLE `users` (
-`id` int UNIQUE PRIMARY KEY NOT NULL DEFAULT (last_insert_rowid() + 1),
+`id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `name` TEXT NOT NULL,
 `email` TEXT UNIQUE NOT NULL,
 `password_hash` TEXT NOT NULL,
-`created_at` int NOT NULL,
-`plevel` int NOT NULL
+`created_at` INTEGER NOT NULL,
+`plevel` INTEGER NOT NULL
 );
 
 CREATE TABLE `quotes` (
-`id` int UNIQUE PRIMARY KEY NOT NULL DEFAULT (last_insert_rowid() + 1),
+`id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `author` TEXT DEFAULT 'Unknown',
 `year` TEXT NOT NULL,
 `quote` TEXT NOT NULL,
-`likes` int DEFAULT 0
+`likes` INTEGER DEFAULT 0
 );
 
 CREATE TABLE `reports` (
-`id` int UNIQUE PRIMARY KEY NOT NULL DEFAULT (last_insert_rowid() + 1),
-`user_id` int,
-`quote_id` int,
+`id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`user_id` INTEGER,
+`quote_id` INTEGER,
 `reason` TEXT NOT NULL,
 `details` TEXT,
-`status` int
+`status` INTEGER
 );
 
 CREATE TABLE `logs` (
-`id` int UNIQUE PRIMARY KEY NOT NULL DEFAULT (last_insert_rowid() + 1),
-`user_id` int,
+`id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`user_id` INTEGER,
 `action` TEXT,
 `message` TEXT
 );
 
 CREATE TABLE `likes` (
-`user_id` int,
-`quote_id` int
+`user_id` INTEGER,
+`quote_id` INTEGER
 );
 
 CREATE TABLE `comments` (
-`user_id` int,
-`quote_id` int,
+`user_id` INTEGER,
+`quote_id` INTEGER,
 `comment` TEXT
 );
 /*
