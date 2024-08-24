@@ -58,7 +58,8 @@ class UserManager:
         self.db.query('DELETE FROM users WHERE id = ?', (user_id,))
 
         return True
-    
+
+um = UserManager()
 
     
     

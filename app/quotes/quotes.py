@@ -2,6 +2,10 @@ from flask import Blueprint, render_template
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
 
+from ..utils import QuoteManager, qm
+
+qm: QuoteManager = qm
+
 blueprint = Blueprint("quotes", __name__, template_folder="templates", url_prefix="/quotes")
 
 class Submit(FlaskForm):
@@ -12,18 +16,22 @@ class Submit(FlaskForm):
 
 @blueprint.route("/home")
 def home():
-    return render_template("quote.html")
+    random_quote = qm.get_quote(-1)
+    qotd = qm.qotd()
+    best_quote = qm.orderd_by_likes()[0]
+    return render_template("quote.html", random_quote=random_quote, qotd=qotd, best_quote=best_quote)
 
 @blueprint.route("/all")
 def all():
-    return render_template("all.html")
+    quotes = qm.search("")
+    return render_template("all.html", quotes=quotes)
 
-@blueprint.route("/submit")
+@blueprint.route("/submit", methods=["GET", "POST"])
 def submit():
     form: Submit = Submit()
+    quotes = qm.search("")
     # TODO: make form functional
     if form.validate_on_submit():
-        form.author.data = None
-        form.year.data = None
-        form.quote.data = None
-    return render_template("submit.html", form=form)
+        qm.create_quote(form.author.data, form.year.data, form.quote.data)
+    
+    return render_template("submit.html", form=form, quotes=quotes)

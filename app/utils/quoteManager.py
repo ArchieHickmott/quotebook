@@ -1,6 +1,9 @@
 from .databaseManager import db 
 from datetime import datetime
 
+from datetime import datetime
+import random
+
 '''
 Database structure is as follows:
 users(id, name, email, password_hash, created_at, plevel)
@@ -15,13 +18,30 @@ class QuoteManager:
     def __init__(self):
         self.db = db
     
-    def get_quote(self, quote_id: int):
+    def get_quote(self, quote_id: int=-1):
         '''
         Get a quote from the database.
         :param quote_id: The ID of the quote.
         '''
+        if quote_id == -1:
+            return self.db.query('SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1')[0]
+        
         return self.db.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
-
+    
+    def qotd(self):
+        '''
+        Get the quote of the day, is the same for all calls on the same day.
+        '''
+        quotes = self.db.query('SELECT * FROM quotes')
+        random.seed(datetime.now().day)
+        return quotes[random.randint(0, len(quotes) - 1)]
+    
+    def orderd_by_likes(self):
+        '''
+        Get all quotes ordered by likes.
+        '''
+        return self.db.query('SELECT * FROM quotes ORDER BY likes DESC')
+    
     def create_quote(self, author: str, quote: str, year: int=datetime.now().year):
         '''
         Create a quote in the database.
@@ -83,5 +103,8 @@ class QuoteManager:
         Search for a quote.
         :param query: The query to search for.
         '''
-        return self.db.query('SELECT * FROM quotes WHERE quote LIKE ?', (f'%{query}%',))
+        quotes = self.db.query('SELECT * FROM quotes WHERE quote LIKE ?', (f'%{query}%',))
+        quotes = [i[1:] for i in quotes]
+        return quotes
         
+qm = QuoteManager()

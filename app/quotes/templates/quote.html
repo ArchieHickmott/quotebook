@@ -3,36 +3,35 @@
 <div style="font-size: larger;">
 <h3>Random Quote</h3>
 <div class="row">
-{# TODO: create random quote #}
     <div class="col-sm-12">
-    "Placeholder Quote"
+    {{random_quote[3]}}
     </div>
 </div>
 <div class="row">
     <div class="col-sm-1"></div>
-    <div class="col-sm-11"><b> - Person, Year</b>
+    <div class="col-sm-11"><b> - {{ random_quote[1] }}, {{ random_quote[2] }}</b>
 </div>
 <h3>Quote of the Day</h3>
 <div class="row">
 {# TODO: create quote of day #}
     <div class="col-sm-12">
-    "Placeholder Quote"
+    {{ qotd[3] }}
     </div>
 </div>
 <div class="row">
     <div class="col-sm-1"></div>
-    <div class="col-sm-11"><b> - Person, Year</b>
+    <div class="col-sm-11"><b> - {{ qotd[1] }}, {{ qotd[2] }}</b>
 </div>
 <h3>Best Quote</h3>
 <div class="row">
 {# TODO: get best quote (most liked) #}
     <div class="col-sm-12">
-    "Placeholder Quote"
+    {{ best_quote[3] }}
     </div>
 </div>
 <div class="row">
     <div class="col-sm-1"></div>
-    <div class="col-sm-11"><b> - Person, Year</b>
+    <div class="col-sm-11"><b> - {{ best_quote[1] }}, {{ best_quote[2] }}</b>
 </div>
 </div>
 {% endblock content %}

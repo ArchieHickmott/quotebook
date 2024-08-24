@@ -11,6 +11,6 @@
 <br>
 {# TODO: get quote data #}
 <div class="row">
-{{render_table([["name", "year", "quote"], ["name", "year", "quote"]], "table-striped", ["name", "year", "quote"])}}
+{{render_table(quotes, "table-striped", ["name", "year", "quote", "likes"])}}
 </div>
 {% endblock content %}
