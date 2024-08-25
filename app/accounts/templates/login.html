@@ -1,6 +1,9 @@
 {% from 'bootstrap5/form.html' import render_form %}
 {% extends "template.html" %}
 {% block content %}
+{% if request.args.get("reason") %}
+<h3>{{request.args.get("reason")}}</h3>
+{% endif %}
 <div class="row">
 <h1>Login</h1>
 </div>

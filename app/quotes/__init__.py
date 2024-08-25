@@ -1,1 +1,1 @@
-from .quotes import blueprint
+from .quotes import blueprint, qm

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
 
-from ..utils import QuoteManager, qm
+from ..utils.quoteManager import QuoteManager, qm
 
 qm: QuoteManager = qm
 
@@ -44,9 +44,7 @@ def search():
         if order == "name": order = "author"
     else:
         order = None
-    print(query, field, order, sep=" ")
     quotes = qm.search(query, field, order)
-    print(quotes)
     return render_template("search.html", quotes=quotes)
 
 @blueprint.route("/submit", methods=["GET", "POST"])
