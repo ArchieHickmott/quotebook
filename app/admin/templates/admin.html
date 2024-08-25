@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+{% if "style" in session %}
+    {% if session["style"] == "dark" %}
+    <html lang="en" data-bs-theme="dark">
+    {% else %}
+    <html lang="en">
+    {% endif %}
+{% else %}
+    {% if "user" in session %}
+    {% if um.get_user(session["user"])["style"] == "dark" %}
+    <html lang="en" data-bs-theme="dark">
+    {% else %}
+    <html lang="en">
+    {% endif %}  
+    {% else %}
+    <html lang="en">
+    {% endif %}
+{% endif %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    {{ bootstrap.load_css() }}
+    <title>{% if title is defined %}{{title}}{% else %}Quotebook{% endif %}</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{bootstrap.load_css()}}
+    {{bootstrap.load_js()}}
+    {% block head %}
+    {% endblock head %}
+</head>
+<body>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<header class="container-fluid" style="padding: 0">
+    <nav class="navbar navbar-expand-sm" style="padding: 15px">
+        <div class="d-flex">
+            <ul class="navbar-nav"> 
+                <li class="nav-item"><a class="nav-link" href="{{url_for('admin.portal')}}" class="nav-link" style="font-size: large;"><b>Quotebook | Admin</b></a></li>
+                <li class="nav-item"><a class="nav-link" href="{{url_for('landing')}}">Main Website</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{url_for('admin.quotes')}}">Quotes</a></li>
+                {% if plevel > 2 %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('admin.security')}}">Security</a></li>
+                {% endif %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('admin.reports')}}">Reports</a></li>
+                {% if plevel > 1 %}
+                <li class="nav-item"><a class="nav-link" href="{{url_for('admin.users')}}">Users</a></li>                
+                {% endif %}
+            </ul>
+        </div>
+        <div class="d-flex ms-auto">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Style</a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><form method="GET" class="dropdown-item" href=""><input type="hidden" value="light" name="style"><input class="nav-link" type="submit" value="light"></form></li>
+                        <li><form method="GET" class="dropdown-item" href=""><input type="hidden" value="dark" name="style"><input class="nav-link" type="submit" value="dark"></form></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+<div class="container">
+{% block content %}
+{% endblock content %}
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
 
@@ -13,6 +13,10 @@ class Submit(FlaskForm):
     year = StringField("year", render_kw={"placeholder": "year"})
     quote = StringField("quote", render_kw={"placeholder": "quote"})
     submit = SubmitField("Submit Field")
+
+@blueprint.route("/")
+def index():
+    return redirect(url_for("quotes.all"))
 
 @blueprint.route("/home")
 def home():

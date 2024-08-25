@@ -94,14 +94,19 @@ class UserManager:
     
 um = UserManager()
 
+def check_logged_in() -> bool:
+    if not "user" in session:
+        return False
+    user = User(**session["user"])
+    if user.is_logged_in:
+        return True
+    return True
+    
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if not "user" in session:
-            return redirect(url_for("accounts.login", reason="login required for this"))
-        user = User(**session["user"])
-        if user.is_logged_in:
+        if check_logged_in():
             return func(*args, **kwargs)
-        return redirect(url_for("accounts.login", reason="login required for this"))
+        return redirect(url_for("accounts.login", reason="login required"))
     return wrapper
     
