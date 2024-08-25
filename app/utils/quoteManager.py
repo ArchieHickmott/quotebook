@@ -41,7 +41,7 @@ class QuoteManager:
         '''
         return self.db.query('SELECT * FROM quotes ORDER BY likes DESC')
     
-    def create_quote(self, author: str, quote: str, year: int=datetime.now().year):
+    def create_quote(self, author: str, year: str, quote: int=datetime.now().year):
         '''
         Create a quote in the database.
         :param author: The author of the quote.
