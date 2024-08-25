@@ -12,7 +12,7 @@ class Submit(FlaskForm):
     author = StringField("name", render_kw={"placeholder": "name"})
     year = StringField("year", render_kw={"placeholder": "year"})
     quote = StringField("quote", render_kw={"placeholder": "quote"})
-    submit = SubmitField("Submit Field")
+    submit = SubmitField("Submit Quote")
 
 @blueprint.route("/")
 def index():
