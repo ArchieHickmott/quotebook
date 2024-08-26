@@ -34,6 +34,12 @@ class Login(FlaskForm):
 def account():
     return render_template("account_page.html")
 
+@blueprint.route("/logout")
+def logout():
+    if "user" in session:
+        session.pop("user")
+    return redirect(url_for("landing"))
+
 @blueprint.route('/login', methods=["GET", "POST"])
 def login():
     form: Login = Login()
