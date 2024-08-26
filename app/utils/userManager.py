@@ -80,15 +80,18 @@ class UserManager:
         :param email: The email of the user.
         :param password_hash: The password hash of the user.
         '''
+        user = self.get_user(user_id)
         if not (style == "dark" or style == "light"):
             style = None
-        for item in [name, email, password_hash, plevel, style]:
+        data_dict = {"name": name, "email": email, "hash": password_hash, "style": style}
+        for key, item in data_dict.items():
             if item is None:
-                item = self.get_user(user_id)[[name, email, password_hash, plevel].index(item)]
+               data_dict[key] = getattr(user, key)
+            else:
+                object.__setattr__(user, key, item)
         logger.info(f"updated user info {user_id}", extra={"userid":user_id, "action":"updated data"})
-        self.db.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ? ', (name, email, password_hash, user_id))
-
-        return User(*self.db.query('SELECT * FROM users WHERE id = ?', (user_id,))[0])
+        parameters = tuple((item[1] for item in data_dict.items()))
+        return User(*self.db.query(f'SELECT * FROM users WHERE id = {user_id}')[0])
 
     def delete_user(self, user_id: int):
         '''
