@@ -1,18 +1,33 @@
-{% import "bootstrap/wtf.html" as wtf %}
 {% extends "template.html" %}
 {% block head %}
 <script src="https://www.google.com/recaptcha/api.js"></script>
 {% endblock head %}
 {% block content %}
-<h2>Login</h2>
-<form method="POST">
-    {{ form.csrf_token }}
-    {{ wtf.quick_form(form) }}
-</form>
-<br>
-<p>
-    don't have an account?<br>
-    register here: <a href="{{url_for('register')}}">register</a>
-</p>
+<div class="form">
+    <h2>Login</h2>
+    <form method="POST">
+        {{ form.csrf_token }}
+
+        <div class="form-row">
+        {% if form.email.errors %}
+        <ul>{% for error in form.email.errors %}<p> * {{ error }}</p>{% endfor %}</ul>
+        {% endif %}
+        {{ form.email (class="form-input", size=30, placeholder="Email") }}
+        </div>
+
+        <div class="form-row">
+        {% if form.password.errors %}
+        <ul>{% for error in form.password.errors %}<p> * {{ error }}</p>{% endfor %}</ul>
+        {% endif %}
+        {{ form.password (class="form-input", size=30, placeholder="Password") }}
+        </div>
+
+        <input class="form-submit" type="submit" value="Login">
+    </form>
+    <br>
+    <p>
+        don't have an account?<br>
+        register here: <a href="{{url_for('register')}}">register</a>
+    </p>
+</div>
 {% endblock content %}
-    
