@@ -10,3 +10,6 @@ source code for the st pats quotebook
 Create a branch for each "project" on the website. Every pull request to the main branch must be reviewed by somebody else.
 TEST YOUR CODE. Even though the production database isn't in the repo, the flask app will generate the database without any data
 you can populate the data yourself if need be
+
+## running app for first time
+Create a database.db, execute database_query.sql on the db (this will be automated at some point) Uncomment line 3 of quotebook.bat and run, this should work
