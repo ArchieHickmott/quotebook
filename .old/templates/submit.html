@@ -1,0 +1,45 @@
+<<<<<<< HEAD:templates/submit.html
+=======
+{% import "bootstrap5/form.html" as wtf %}
+>>>>>>> Restructure:.old/templates/submit.html
+{% from "_render_table.html" import render_table%}
+{% extends "template.html" %}
+{% block content %}
+<h3 class="important">Read before submitting!</h3>
+<p class="important">
+    This is meant to be a quotebook for funny quotes from people we know.
+    I don't take responsibility for any content on this site.
+</p>
+<<<<<<< HEAD:templates/submit.html
+<br>
+<div class="form submit-form">
+    <h2>Submit a Quote</h2>
+    <form method="POST" id="form">
+        {{form.crsf_token}}
+    {# {{wtf.quick_form(form, button_map = {"submit": "secondary"})}} #}
+        <div class="form-group">
+            {{form.name.label}}
+            {{form.name(class="form-control")}}
+        </div>
+        <div class="form-group">
+            {{form.date.label}}
+            {{form.date(class="form-control")}}
+        </div>
+        <div class="form-group">
+            {{form.quote.label}}
+            {{form.quote(class="form-control")}}
+        </div>
+        <input class="form-submit" type="submit" value="Submit">
+    </form>
+</div>
+=======
+<form method="POST" id="form">
+{{form.crsf_token}}
+{{wtf.render_form(form, button_map = {"submit": "secondary"})}}
+</form>
+>>>>>>> Restructure:.old/templates/submit.html
+<br>
+<div class="row">
+{{render_table(quotes, "table-striped", ["name", "year", "quote"])}}
+</div>
+{% endblock content %}

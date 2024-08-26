@@ -1,0 +1,11 @@
+{% extends "template.html" %}
+{% block content %}
+Are you sure you want to delete your account
+<div class="text-danger">
+this cannot be undone
+</div>
+<form method="POST">
+    {{form.csrf_token}}
+    {{wtf.render_form(form)}}
+</form>
+{% endblock content %}

@@ -2,3 +2,6 @@ env.env
 env.py
 **/__pycache__
 /*.db
+/backups/
+/.venv
+/.vscode
