@@ -1,12 +1,19 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
+import random
+import datetime
 
 from ..utils.quoteManager import QuoteManager, qm
+from ..utils.databaseManager import db
+from ..utils.userManager import User
 
 qm: QuoteManager = qm
 
 blueprint = Blueprint("quotes", __name__, template_folder="templates", url_prefix="/quotes")
+
+get_liked_sql = "CASE WHEN id IN (SELECT quote_id FROM likes WHERE user_id={id}) THEN 2 ELSE 1 END"
+
 
 class Submit(FlaskForm):
     author = StringField("name", render_kw={"placeholder": "name"})
@@ -14,23 +21,46 @@ class Submit(FlaskForm):
     quote = StringField("quote", render_kw={"placeholder": "quote"})
     submit = SubmitField("Submit Quote")
 
-@blueprint.route("/")
+@blueprint.before_request
+def before():
+    if "like" in request.form and "user" in session:
+        user = User(**session["user"])
+        qm.like_quote(user.id, int(request.form["like"]))
+    elif "unlike" in request.form and "user" in session:
+        user = User(**session["user"])
+        qm.unlike_quote(user.id, int(request.form["unlike"]))
+
+@blueprint.route("/", methods=["GET", "POST"])
 def index():
     return redirect(url_for("quotes.all"))
 
-@blueprint.route("/home")
+@blueprint.route("/home", methods=["GET", "POST"])
 def home():
-    random_quote = qm.get_quote(-1)
-    qotd = qm.qotd()
-    best_quote = qm.orderd_by_likes()[0]
+    if "user" in session:
+        user = User(**session["user"])
+        random_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+                                    FROM quotes 
+                                    ORDER BY RANDOM()
+                                    LIMIT 1""")[0]
+        quotes = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+                              FROM quotes""")
+        random.seed(datetime.datetime.now().day)
+        qotd = quotes[random.randint(0, len(quotes) - 1)]
+        best_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)}
+                                  FROM quotes 
+                                  ORDER BY likes DESC""")[0]
+    else:
+        random_quote = qm.get_quote(-1)
+        qotd = qm.qotd()
+        best_quote = qm.orderd_by_likes()[0]
     return render_template("quote.html", random_quote=random_quote, qotd=qotd, best_quote=best_quote)
 
-@blueprint.route("/all")
+@blueprint.route("/all", methods=["GET", "POST"])
 def all():
     quotes = qm.search("", order_by="likes DESC")
     return render_template("all.html", quotes=quotes)
 
-@blueprint.route("/search")
+@blueprint.route("/search", methods=["GET", "POST"])
 def search():
     if request.args.get("query"):
         query = request.args.get("query")

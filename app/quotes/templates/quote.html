@@ -2,6 +2,7 @@
 {% block content %}
 <div style="font-size: larger;">
 <h3>Random Quote</h3>
+<a href="{{url_for('quotes.home')}}">next quote</a>
 <div class="row">
     <div class="col-sm-12">
     {{random_quote[3]}}
@@ -10,6 +11,18 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ random_quote[1] }}, {{ random_quote[2] }}</b>
+    {% if random_quote[4] == 1 %}
+    <form method="POST">
+        <input type="hidden" value="{{random_quote[0]}}" name="like">
+        <input type="submit" value="like">
+    </form> 
+    {% endif %}
+    {% if random_quote[4] == 2 %}
+    <form method="POST">
+        <input type="hidden" value="{{random_quote[0]}}" name="unlike">
+        <input type="submit" value="unlike">
+    </form>
+    {% endif %}
 </div>
 <h3>Quote of the Day</h3>
 <div class="row">
@@ -20,6 +33,18 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ qotd[1] }}, {{ qotd[2] }}</b>
+    {% if qotd[4] == 1 %}
+    <form method="POST">
+        <input type="hidden" value="{{qotd[0]}}" name="like">
+        <input type="submit" value="like">
+    </form> 
+    {% endif %}
+    {% if qotd[4] == 2 %}
+    <form method="POST">
+        <input type="hidden" value="{{qotd[0]}}" name="unlike">
+        <input type="submit" value="unlike">
+    </form>
+    {% endif %}
 </div>
 <h3>Best Quote</h3>
 <div class="row">
@@ -30,6 +55,18 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ best_quote[1] }}, {{ best_quote[2] }}</b>
+    {% if best_quote[4] == 1 %}
+    <form method="POST">
+        <input type="hidden" value="{{best_quote[0]}}" name="like">
+        <input type="submit" value="like">
+    </form> 
+    {% endif %}
+    {% if best_quote[4] == 2 %}
+    <form method="POST">
+        <input type="hidden" value="{{best_quote[0]}}" name="unlike">
+        <input type="submit" value="unlike">
+    </form>
+    {% endif %}
 </div>
 </div>
 {% endblock content %}

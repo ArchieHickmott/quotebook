@@ -24,7 +24,6 @@ class QuoteManager:
         '''
         if quote_id == -1:
             return self.db.query('SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1')[0]
-        
         return self.db.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
     
     def qotd(self):
@@ -79,7 +78,10 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.db.query('INSERT INTO likes (user_id, quote_id) VALUES (?, ?)', (user_id, quote_id))
+        if self.db.query(f"SELECT quote_id FROM likes WHERE user_id={user_id} AND quote_id={quote_id}") != []:
+            return
+        self.db.query(f'INSERT INTO likes (user_id, quote_id) VALUES ({user_id}, {quote_id})')
+        self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote_id}) WHERE id={quote_id}")
     
     def unlike_quote(self, user_id: int, quote_id: int):
         '''
@@ -87,7 +89,8 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.db.query('DELETE FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
+        self.db.query(f'DELETE FROM likes WHERE user_id = {user_id} AND quote_id = {quote_id}')
+        self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote_id}) WHERE id={quote_id}")
     
     def get_liked(self, user_id: int, quote_id: int):
         '''
@@ -95,7 +98,7 @@ class QuoteManager:
         :param user_id: The ID of the user.
         :param quote_id: The ID of the quote.
         '''
-        return self.db.query('SELECT * FROM likes WHERE user_id = ? AND quote_id = ?', (user_id, quote_id))
+        return self.db.query(f'SELECT * FROM likes WHERE user_id = {user_id} AND quote_id = {quote_id}')
     
     def search(self, query: str, search_field: str=None, order_by: str=None):
         '''
