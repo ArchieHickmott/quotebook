@@ -12,6 +12,7 @@ from werkzeug.exceptions import HTTPException
 
 # Local
 from .utils import db
+from .utils.userManager import User, um
 from .quotes import qm
 from .errors import error_codes
 from .utils.logger import logger
@@ -35,6 +36,12 @@ flask_app.register_blueprint(quotes)
 
 @flask_app.before_request
 def before():
+    if "user" in session:
+        user = User(**session["user"])
+        session["style"] = user.style
+        if request.args.get("style"):
+            session["style"] = request.args.get("style")
+            um.update_user(user.id, style=session["style"])
     if not "style" in session:
         session["style"] = "light"
     if request.args.get("style"):
