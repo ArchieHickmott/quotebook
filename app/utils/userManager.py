@@ -15,6 +15,7 @@ from flask import session, redirect, url_for
 
 from .databaseManager import db, DatabaseManager
 from .crypt import check_password_hash
+from .logger import logger
 
 @dataclass(frozen=True) 
 class User:
@@ -28,9 +29,14 @@ class User:
     is_logged_in: bool = False
     
     def log_in(self, password) -> bool:
-        object.__setattr__(self, "is_logged_in", check_password_hash(self.hash, password))
+        is_logged_in = check_password_hash(self.hash, password)
+        if is_logged_in:
+            logger.info(f"\x1b[33muser {self.id} logged in\x1b[0m", extra={"userid": self.id, "action":"login"})
+        else:
+            logger.info(f"\x1b[33mfailed user {self.id} log in\x1b[0m", extra={"userid": self.id, "action":"failed login"})
+        object.__setattr__(self, "is_logged_in", is_logged_in)
         return self.is_logged_in
-        
+
 class UserManager:
     def __init__(self):
         self.db: DatabaseManager = db
@@ -61,9 +67,10 @@ class UserManager:
         :param password_hash: The password hash of the user.
         '''
         
-        print(self.db.query('INSERT INTO users (name, email, password_hash, style, created_at, plevel) VALUES (?, ?, ?, ?, ?, ?)', (name, email, password_hash, style, int(time()), 0)))
-
-        return User(*self.db.query('SELECT * FROM users WHERE email = ?', (email,))[0])
+        self.db.query('INSERT INTO users (name, email, password_hash, style, created_at, plevel) VALUES (?, ?, ?, ?, ?, ?)', (name, email, password_hash, style, int(time()), 0))
+        user = User(*self.db.query('SELECT * FROM users WHERE email = ?', (email,))[0])
+        logger.info(f"user created {user.id}", extra={"userid":user.id, "action":"user created"})
+        return user
 
     def update_user(self, user_id: int, name: str=None, email: str=None, password_hash: str=None, plevel: int=None, style: str=None):
         '''
@@ -78,7 +85,7 @@ class UserManager:
         for item in [name, email, password_hash, plevel, style]:
             if item is None:
                 item = self.get_user(user_id)[[name, email, password_hash, plevel].index(item)]
-        
+        logger.info(f"updated user info {user_id}", extra={"userid":user_id, "action":"updated data"})
         self.db.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ? ', (name, email, password_hash, user_id))
 
         return User(*self.db.query('SELECT * FROM users WHERE id = ?', (user_id,))[0])
@@ -89,7 +96,7 @@ class UserManager:
         :param user_id: The ID of the user.
         '''
         self.db.query('DELETE FROM users WHERE id = ?', (user_id,))
-
+        logger.warning(f"deleted user {user_id}", extra={"userid":user_id, "action":"deleted"})
         return True
     
 um = UserManager()

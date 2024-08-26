@@ -1,3 +1,3 @@
-from app import app
+from app import main 
 
-app.run("0.0.0.0", 5000, True)
+main("0.0.0.0", 5000, True)

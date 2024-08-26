@@ -2,6 +2,9 @@ from typing import Any, List, Tuple, Dict
 
 import sqlparse
 
+import logging
+
+logger = logging.getLogger()
 class DatabaseManager:
     def __init__(self, path):
         import sqlite3
@@ -66,6 +69,7 @@ class DatabaseManager:
                 cursor.execute(query, values)
                 return cursor.fetchall()
             except Exception as e:
+                logger.error(f"{type(e)} error in database {e.__dict__.get("msg")}")
                 return e
         
     def execute(self, 
@@ -87,8 +91,9 @@ class DatabaseManager:
                 cursor.execute(query, values)
                 cursor.connection.commit()
                 return True
-            except Exception as e:
-                return e
+            except Exception as exception:
+                logger.error(f"{type(exception).__name__} error in database")
+                return exception
             
     def reset_db(self):
         '''

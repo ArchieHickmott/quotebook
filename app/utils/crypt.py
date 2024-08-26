@@ -41,5 +41,4 @@ def check_password_hash(pw_hash, password):
         password = hashlib.sha256(password).hexdigest()
         password = _unicode_to_bytes(password)
 
-    print(pw_hash)
     return bcrypt.checkpw(password, pw_hash)

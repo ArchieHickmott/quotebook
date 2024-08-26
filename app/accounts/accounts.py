@@ -5,6 +5,7 @@ from wtforms.fields import StringField, SubmitField, EmailField, PasswordField
 from ..utils.userManager import um, login_required
 from ..utils import db
 from ..utils.crypt import generate_password_hash
+import logging
 
 blueprint = Blueprint("accounts", __name__, template_folder="templates", url_prefix="/accounts")
 
@@ -42,7 +43,6 @@ def login():
         try:
             user = um.get_user(email=email)
             if user.log_in(password):
-                print(user)
                 session["user"] = user
                 return redirect(url_for("accounts.account"))
         except:
