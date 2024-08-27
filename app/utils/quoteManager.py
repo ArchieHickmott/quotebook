@@ -16,6 +16,9 @@ comments(user_id, quote_id, comment)
 class QuoteManager:
     def __init__(self):
         self.db = db
+        quotes = db.query("SELECT id FROM quotes")
+        for quote in quotes:
+            self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote[0]}) WHERE id={quote[0]}")
     
     def get_quote(self, quote_id: int=-1):
         '''

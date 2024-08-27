@@ -5,3 +5,4 @@ env.py
 /backups/
 /.venv
 /.vscode
+/logs.log

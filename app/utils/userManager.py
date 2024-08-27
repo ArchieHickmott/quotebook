@@ -69,7 +69,7 @@ class UserManager:
         
         self.db.query('INSERT INTO users (name, email, password_hash, style, created_at, plevel) VALUES (?, ?, ?, ?, ?, ?)', (name, email, password_hash, style, int(time()), 0))
         user = User(*self.db.query('SELECT * FROM users WHERE email = ?', (email,))[0])
-        logger.info(f"user created {user.id}", extra={"userid":user.id, "action":"user created"})
+        logger.info(f"\x1b[33muser created {user.id}\x1b[0m", extra={"userid":user.id, "action":"user created"})
         return user
 
     def update_user(self, user_id: int, name: str=None, email: str=None, password_hash: str=None, plevel: int=None, style: str=None):
@@ -89,8 +89,9 @@ class UserManager:
                data_dict[key] = getattr(user, key)
             else:
                 object.__setattr__(user, key, item)
-        logger.info(f"updated user info {user_id}", extra={"userid":user_id, "action":"updated data"})
+        logger.info(f"\x1b[33mupdated user info {user_id}\x1b[0m", extra={"userid":user_id, "action":"updated data"})
         parameters = tuple((item[1] for item in data_dict.items()))
+        self.db.query(f"UPDATE users SET name=?, email=?, password_hash=?, style=? WHERE id={user_id}", parameters)
         return User(*self.db.query(f'SELECT * FROM users WHERE id = {user_id}')[0])
 
     def delete_user(self, user_id: int):

@@ -29,6 +29,7 @@ def before():
         return
     return abort(401)
 
+
 @blueprint.route("/")
 def portal():
     user = User(**session["user"])
