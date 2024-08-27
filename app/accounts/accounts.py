@@ -39,7 +39,7 @@ def home():
 def account():
     user = User(**session["user"])
     liked_quotes = db.query(f"SELECT author, year, quote, likes FROM quotes WHERE id in (SELECT quote_id FROM likes WHERE user_id={user.id})")
-    return render_template("account_page.html", name=user.name, email=user.email, likes=liked_quotes)
+    return render_template("account_page.html", plevel=user.plevel, name=user.name, email=user.email, likes=liked_quotes)
 
 @blueprint.route('/login', methods=["GET", "POST"])
 def login():

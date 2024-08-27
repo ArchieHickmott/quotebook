@@ -6,6 +6,9 @@
 </div>
 <div class="row">
     <h4>Welcome {{name}}</h4>
+    {% if plevel > 0 %}
+    <a href="{{url_for('admin.portal')}}">Admin Portal</a>
+    {% endif %}
 </div>
 <div class="row">
 <ul>
