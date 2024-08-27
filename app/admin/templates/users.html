@@ -1,4 +1,6 @@
+{% from "_utils.html" import render_table %}
 {% extends "admin.html" %}
 {% block content %}
-
+<h2>Users</h2>
+{{render_table(users, "table table-striped", ["id", "name", "email", "created at", "style", "permission level"])}}
 {% endblock content %}

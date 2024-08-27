@@ -1,4 +1,7 @@
+{% from "_utils.html" import render_table %}
 {% extends "admin.html" %}
 {% block content %}
-
+<h2>Security Data</h2>
+<h3>User Logs</h3>
+{{render_table(logs, "table table-striped", ["log_id", "user_id", "action", "message", "time", "ip", "user_agent"])}}
 {% endblock content %}
