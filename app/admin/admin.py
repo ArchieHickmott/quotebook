@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, session, abort
 from ..utils.userManager import check_logged_in, um, User
-from ..utils.databaseManager import db
-from ..utils.quoteManager import qm
-from ..utils.logger import logger
+from ..utils import db, qm, logger
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 

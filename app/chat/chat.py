@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session
-from ..utils.userManager import login_required, User
+from ..utils import login_required, User
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 blueprint = Blueprint("chat", __name__, template_folder="templates", url_prefix="/chat")

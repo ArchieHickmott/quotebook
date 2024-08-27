@@ -2,10 +2,7 @@ from flask import Blueprint, render_template, session, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
 from wtforms.fields import StringField, SubmitField, EmailField, PasswordField
-from ..utils.userManager import um, login_required, User
-from ..utils import db
-from ..utils.crypt import generate_password_hash
-import logging
+from ..utils import um, login_required, User, generate_password_hash, db
 
 blueprint = Blueprint("accounts", __name__, template_folder="templates", url_prefix="/accounts")
 

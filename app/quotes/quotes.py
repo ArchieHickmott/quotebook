@@ -5,11 +5,9 @@ from wtforms.validators import DataRequired
 import random
 import datetime
 
-from ..utils.quoteManager import QuoteManager, qm
-from ..utils.databaseManager import db
-from ..utils.userManager import User
+from ..utils import qm, db, User
 
-qm: QuoteManager = qm
+qm = qm
 
 blueprint = Blueprint("quotes", __name__, template_folder="templates", url_prefix="/quotes")
 

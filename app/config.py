@@ -11,11 +11,10 @@ from flask_bootstrap import Bootstrap5
 from werkzeug.exceptions import HTTPException
 
 # Local
-from .utils import db
-from .utils.userManager import User, um
+from .utils import db, User, um
 from .quotes import qm
 from .errors import error_codes
-from .utils.logger import logger
+from .utils import logger
 
 flask_app = Flask(__name__)
 flask_app = Flask(__name__)
