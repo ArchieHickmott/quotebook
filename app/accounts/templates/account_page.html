@@ -1,4 +1,20 @@
+{% from "_utils.html" import render_table %}
 {% extends "template.html" %}
 {% block content %}
-USER PAGE
+<div class="row">
+    <h2>My Account</h2>
+</div>
+<div class="row">
+    <h4>Welcome {{name}}</h4>
+</div>
+<div class="row">
+<ul>
+    <li><b>Name:</b> {{name}}</li>
+    <li><b>Email:</b> {{email}}</li>
+</ul>
+</div>
+<div class="row">
+    <h4>Liked Quotes</h4>
+    {{render_table(likes, "table-striped", ["name", "year", "quote", "likes"])}}
+</div>
 {% endblock content %}

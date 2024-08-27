@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, session, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
 from wtforms.fields import StringField, SubmitField, EmailField, PasswordField
-from ..utils.userManager import um, login_required
+from ..utils.userManager import um, login_required, User
 from ..utils import db
 from ..utils.crypt import generate_password_hash
 import logging
@@ -31,8 +31,15 @@ class Login(FlaskForm):
 
 @blueprint.route("/")
 @login_required
+def home():
+    return redirect(url_for("accounts.account"))
+
+@blueprint.route("/account")
+@login_required
 def account():
-    return render_template("account_page.html")
+    user = User(**session["user"])
+    liked_quotes = db.query(f"SELECT author, year, quote, likes FROM quotes WHERE id in (SELECT quote_id FROM likes WHERE user_id={user.id})")
+    return render_template("account_page.html", name=user.name, email=user.email, likes=liked_quotes)
 
 @blueprint.route('/login', methods=["GET", "POST"])
 def login():
