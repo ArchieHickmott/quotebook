@@ -1,8 +1,8 @@
 from typing import Any, List, Tuple, Dict
+import logging
 
 import sqlparse
-
-import logging
+from ..errors import DatabaseSecurityError
 
 logger = logging.getLogger()
 class DatabaseManager:
@@ -30,7 +30,7 @@ class DatabaseManager:
         """
         parsed = sqlparse.parse(query)
         if len(parsed) > 1:
-            return False #TODO: decide a better return value
+            return DatabaseSecurityError("tried to execute too many statements on .query()") #TODO: decide a better return value
         return self.multi_query(query, values)
         
     def multi_query(self, 

@@ -1,3 +1,6 @@
+class DatabaseSecurityError(Exception):
+    pass
+
 error_codes = \
 {
     # HTTP exceptions like 4XX
