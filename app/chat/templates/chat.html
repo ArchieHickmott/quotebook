@@ -1,4 +1,62 @@
 {% extends "template.html" %}
+{% block head %}
+<style>
+    #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    #messages li {
+        margin-bottom: 10px;    
+    }
+</style>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+    const socket = io();
+
+    function joinRoom() {
+        const username = "{{username}}";
+        const room = 'main';
+        socket.emit('join', {username, room});
+    }
+
+    function sendMessage() {
+        const message = document.getElementById('message').value;
+        const room = 'main';
+        const formattedMessage = "{{user}}: " + message;
+        socket.emit('send_message', { message: formattedMessage, room: room });
+        document.getElementById('message').value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputField = document.getElementById('message');
+        inputField.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+
+    socket.on('receive_message', function(message) {
+        const messages = document.getElementById('messages');
+        const newMessage = document.createElement('li');
+        newMessage.textContent = message;
+        messages.appendChild(newMessage);
+        messages.scrollTop = messages.scrollHeight - messages.clientHeight
+    });
+
+    window.onload = joinRoom;
+</script>
+{% endblock head %}
 {% block content %}
-CHAT IS NOT IMPLEMENTED YET
+<h1>Welcome to the Chatroom</h1>
+<ul id="messages"></ul>
+<input type="text" id="message" placeholder="Type your message" required>
+<button onclick="sendMessage()">Send</button>
 {% endblock content %}

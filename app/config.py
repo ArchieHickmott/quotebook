@@ -17,22 +17,23 @@ from .quotes import qm
 from .errors import error_codes
 from .utils.logger import logger
 
-# Blueprints
-from .accounts import blueprint as account
-from .admin import blueprint as admin
-from .chat import blueprint as chat
-from .quotes import blueprint as quotes
-
 flask_app = Flask(__name__)
 flask_app = Flask(__name__)
 flask_app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(hours=1)
 bootstrap = Bootstrap5(flask_app)
 flask_app.config["SECRET_KEY"] = randbytes(128)
 
+# Blueprints
+from .accounts import blueprint as account
+from .admin import blueprint as admin
+from .chat import blueprint as chat, socket
+from .quotes import blueprint as quotes
+
 flask_app.register_blueprint(account)
 flask_app.register_blueprint(admin)
-flask_app.register_blueprint(chat)
 flask_app.register_blueprint(quotes)
+flask_app.register_blueprint(chat)
+socket.init_app(flask_app)
 
 @flask_app.before_request
 def before():
