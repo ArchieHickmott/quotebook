@@ -38,15 +38,15 @@ def index():
 def home():
     if "user" in session:
         user = User(**session["user"])
-        random_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+        random_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
                                     FROM quotes 
                                     ORDER BY RANDOM()
                                     LIMIT 1""")[0]
-        quotes = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+        quotes = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
                               FROM quotes""")
         random.seed(datetime.datetime.now().day)
         qotd = quotes[random.randint(0, len(quotes) - 1)]
-        best_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)}
+        best_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)}
                                   FROM quotes 
                                   ORDER BY likes DESC""")[0]
     else:

@@ -11,13 +11,13 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ random_quote[1] }}, {{ random_quote[2] }}</b>
-    {% if random_quote[4] == 1 %}
+    {% if random_quote[5] == 1 %}
     <form method="POST">
         <input type="hidden" value="{{random_quote[0]}}" name="like">
         <input type="submit" value="like">
     </form> 
     {% endif %}
-    {% if random_quote[4] == 2 %}
+    {% if random_quote[5] == 2 %}
     <form method="POST">
         <input type="hidden" value="{{random_quote[0]}}" name="unlike">
         <input type="submit" value="unlike">
@@ -33,13 +33,13 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ qotd[1] }}, {{ qotd[2] }}</b>
-    {% if qotd[4] == 1 %}
+    {% if qotd[5] == 1 %}
     <form method="POST">
         <input type="hidden" value="{{qotd[0]}}" name="like">
         <input type="submit" value="like">
     </form> 
     {% endif %}
-    {% if qotd[4] == 2 %}
+    {% if qotd[5] == 2 %}
     <form method="POST">
         <input type="hidden" value="{{qotd[0]}}" name="unlike">
         <input type="submit" value="unlike">
@@ -55,13 +55,13 @@
 <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-11"><b> - {{ best_quote[1] }}, {{ best_quote[2] }}</b>
-    {% if best_quote[4] == 1 %}
+    {% if best_quote[5] == 1 %}
     <form method="POST">
         <input type="hidden" value="{{best_quote[0]}}" name="like">
         <input type="submit" value="like">
     </form> 
     {% endif %}
-    {% if best_quote[4] == 2 %}
+    {% if best_quote[5] == 2 %}
     <form method="POST">
         <input type="hidden" value="{{best_quote[0]}}" name="unlike">
         <input type="submit" value="unlike">
