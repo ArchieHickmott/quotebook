@@ -1,1 +1,1 @@
- - [ ] integrate python logging with logging table 
+ - [x] integrate python logging with logging table 
