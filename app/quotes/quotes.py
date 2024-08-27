@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, SubmitField
+from wtforms.validators import DataRequired
 import random
 import datetime
 
@@ -16,9 +17,9 @@ get_liked_sql = "CASE WHEN id IN (SELECT quote_id FROM likes WHERE user_id={id})
 
 
 class Submit(FlaskForm):
-    author = StringField("name", render_kw={"placeholder": "name"})
-    year = StringField("year", render_kw={"placeholder": "year"})
-    quote = StringField("quote", render_kw={"placeholder": "quote"})
+    author = StringField("name", [DataRequired()], render_kw={"placeholder": "name"})
+    year = StringField("year", [DataRequired()], render_kw={"placeholder": "year"})
+    quote = StringField("quote", [DataRequired()], render_kw={"placeholder": "quote"})
     submit = SubmitField("Submit Quote")
 
 @blueprint.before_request
@@ -38,15 +39,15 @@ def index():
 def home():
     if "user" in session:
         user = User(**session["user"])
-        random_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+        random_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
                                     FROM quotes 
                                     ORDER BY RANDOM()
                                     LIMIT 1""")[0]
-        quotes = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)} 
+        quotes = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
                               FROM quotes""")
         random.seed(datetime.datetime.now().day)
         qotd = quotes[random.randint(0, len(quotes) - 1)]
-        best_quote = db.query(f"""SELECT id, author, year, quote, {get_liked_sql.format(id=user.id)}
+        best_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)}
                                   FROM quotes 
                                   ORDER BY likes DESC""")[0]
     else:

@@ -36,6 +36,12 @@
         {% else %}
         <li class="nav-item justify-content-end"><a class="nav-link" href="{{url_for('accounts.account')}}">My Account</a></li>
         {% endif %}
+        <li class="nav-item justify-content-end">
+        <form method="GET" action="{{url_for('quotes.search')}}">
+            <input type="text" name="query" placeholder="search">
+            <input type="submit" value="search">
+        </form>
+        </li>
     </ul>
     </nav>
     </header>
