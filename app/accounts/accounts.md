@@ -14,5 +14,5 @@ Used to register a user
  - [x] created register functionality
  - [x] created login functionality
  - [x] created check login functionality
- - [ ] populated userpage
+ - [x] populated userpage
  - [ ] created comment liking functionality
