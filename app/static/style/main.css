@@ -167,3 +167,7 @@ b {
 tr.user-table-row:hover {
     text-decoration: underline;
 }
+
+.quote:hover {
+    text-decoration: underline;
+}

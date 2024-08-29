@@ -5,14 +5,13 @@ from wtforms.validators import DataRequired
 import random
 import datetime
 
-from ..utils import qm, db, User, login_required
+from ..utils import qm, db, User, login_required, logger
 
 qm = qm
 
 blueprint = Blueprint("quotes", __name__, template_folder="templates", url_prefix="/quotes")
 
 get_liked_sql = "CASE WHEN id IN (SELECT quote_id FROM likes WHERE user_id={id}) THEN 2 ELSE 1 END"
-
 
 class Submit(FlaskForm):
     author = StringField("name", [DataRequired()], render_kw={"placeholder": "name"})
@@ -30,6 +29,10 @@ class Report(FlaskForm):
                                   ("other", "other")])
     details = StringField("details")
     submit = SubmitField("submit a report")
+    
+class Comment(FlaskForm):
+    comment = StringField(validators=[DataRequired()], render_kw={"placeholder":"Comment"})
+    submit = SubmitField("Comment")
 
 @blueprint.before_request
 def before():
@@ -48,17 +51,9 @@ def index():
 def home():
     if "user" in session:
         user = User(**session["user"])
-        random_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
-                                    FROM quotes 
-                                    ORDER BY RANDOM()
-                                    LIMIT 1""")[0]
-        quotes = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)} 
-                              FROM quotes""")
-        random.seed(datetime.datetime.now().day)
-        qotd = quotes[random.randint(0, len(quotes) - 1)]
-        best_quote = db.query(f"""SELECT id, author, year, quote, likes, {get_liked_sql.format(id=user.id)}
-                                  FROM quotes 
-                                  ORDER BY likes DESC""")[0]
+        random_quote = qm.get_quote(-1, user.id)
+        qotd = qm.qotd(user.id)
+        best_quote = qm.orderd_by_likes(user.id)[0]
     else:
         random_quote = qm.get_quote(-1)
         qotd = qm.qotd()
@@ -68,6 +63,7 @@ def home():
 @blueprint.route("/all", methods=["GET", "POST"])
 def all():
     quotes = qm.search("", order_by="likes DESC")
+    print(quotes[0][1:5])
     return render_template("all.html", quotes=quotes)
 
 @blueprint.route("/search", methods=["GET", "POST"])
@@ -114,8 +110,8 @@ def report():
     quote = int(quote)
     if form.validate_on_submit():
         user = User(**session["user"])
-        reason = form.reason
-        details = form.details
+        reason = form.reason.data
+        details = form.details.data 
         db.query(f"INSERT INTO reports (user_id, quote_id, reason, details, status) VALUES ({user.id}, {quote}, ?, ?, 0)",
                  (reason, details))
         # yeah ik and don't care that this is bad practice, fight me about it
@@ -130,8 +126,24 @@ def report():
     quote = db.query(f"SELECT author, year, quote FROM quotes WHERE id={quote}")[0]
     return render_template("report.html", quote=quote, form=form)
 
-@blueprint.route("/<int:quoteid>")
+@blueprint.route("/<int:quoteid>", methods=["GET", "POST"])
 def quote_page(quoteid):
-    quote = qm.get_quote(quoteid)
-    return render_template("quote.html", quote=quote)
+    comments = db.query(f"SELECT (SELECT name FROM users WHERE id=user_id), comment FROM comments WHERE quote_id = {quoteid}")
+    if "user" in session:
+        user = User(**session["user"])
+        quote = qm.get_quote(quoteid, user.id)
+        comment: Comment = Comment()
+        if comment.validate_on_submit():
+            text = comment.comment.data
+            comment.comment.data = None
+            db.query(f"INSERT INTO comments VALUES ({user.id}, {quoteid}, ?)", (text,))
+            comments = db.query(f"SELECT (SELECT name FROM users WHERE id=user_id), comment FROM comments WHERE quote_id = {quoteid}")
+        if request.args.get("report"):
+            return redirect(url_for("quotes.report", quote=quoteid))
+        return render_template("quote.html", quote=quote, comment=comment, comments=comments)
+    else:
+        quote = qm.get_quote(quoteid)
+    if request.args.get("report"):
+        return redirect(url_for("quotes.report", quote=quoteid))
+    return render_template("quote.html", quote=quote, comments=comments)
     

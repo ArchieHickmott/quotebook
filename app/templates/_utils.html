@@ -14,3 +14,25 @@
 {% endfor %}
 </table>
 {% endmacro %}
+
+{% macro render_quotes(quotes) %}
+<table class="table table-striped">
+    <th>Name</th>
+    <th>Year</th>
+    <th>Quote</th>
+    <th>Likes</th>
+    {% for quote in quotes %}
+        <tr class="quote" onclick="location.href = '/quotes/{{quote[0]}}'">
+        {% for data in quote[1:5] %}
+            <td>{{data}}</td>
+        {% endfor %}
+        {% if quote[5] == 2 %}
+            <form method="POST">
+                <input type="hidden" value="{{quote[0]}}" name="unlike">
+                <input type="submit" value="unlike">
+            </form>
+        {% endif %}
+        </tr>
+    {% endfor %}
+</table>
+{% endmacro %}

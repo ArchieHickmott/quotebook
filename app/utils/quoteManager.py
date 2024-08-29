@@ -14,36 +14,39 @@ comments(user_id, quote_id, comment)
 '''
 
 class QuoteManager:
+    get_liked_sql = ", CASE WHEN id IN (SELECT quote_id FROM likes WHERE user_id={id}) THEN 2 ELSE 1 END"
     def __init__(self):
         self.db = db
         quotes = db.query("SELECT id FROM quotes")
         for quote in quotes:
             self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote[0]}) WHERE id={quote[0]}")
     
-    def get_quote(self, quote_id: int=-1):
+    def get_quote(self, quote_id: int=-1, userid=None):
         '''
         Get a quote from the database.
         :param quote_id: The ID of the quote.
         '''
         if quote_id == -1:
-            return self.db.query('SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1')[0]
-        return self.db.query('SELECT * FROM quotes WHERE id = ?', (quote_id,))[0]
+            sql = f'SELECT id, author, year, quote, likes {self.get_liked_sql.format(id=userid) if userid else ""} FROM quotes ORDER BY RANDOM() LIMIT 1'
+            return self.db.query(sql)[0]
+        sql = f'SELECT id, author, year, quote, likes {self.get_liked_sql.format(id=userid) if userid else ""} FROM quotes WHERE id = ?'
+        return self.db.query(sql, (quote_id,))[0]
     
-    def qotd(self):
+    def qotd(self, userid=None):
         '''
         Get the quote of the day, is the same for all calls on the same day.
         '''
-        quotes = self.db.query('SELECT * FROM quotes')
+        quotes = self.db.query(f'SELECT id, author, year, quote, likes {self.get_liked_sql.format(id=userid) if userid else ""} FROM quotes')
         random.seed(datetime.now().day)
         return quotes[random.randint(0, len(quotes) - 1)]
     
-    def orderd_by_likes(self):
+    def orderd_by_likes(self, userid=None):
         '''
-        Get all quotes ordered by likes.
+        Get all quotes ordered by likes. 
         '''
-        return self.db.query('SELECT * FROM quotes ORDER BY likes DESC')
+        return self.db.query(f'SELECT id, author, year, quote, likes {self.get_liked_sql.format(id=userid) if userid else ""} FROM quotes ORDER BY likes DESC')
     
-    def create_quote(self, author: str, year: str, quote: int=datetime.now().year):
+    def create_quote(self, author: str, year: str=datetime.now().year, quote: int=None):
         '''
         Create a quote in the database.
         :param author: The author of the quote.
@@ -113,7 +116,6 @@ class QuoteManager:
         elif search_field: quotes = self.db.query(f'SELECT * FROM quotes WHERE {search_field} LIKE ? ORDER BY {order_by}', (f'%{query}%',))
         else: quotes = self.db.query(f'SELECT * FROM quotes WHERE author LIKE ? OR year LIKE ? OR quote LIKE ? ORDER BY {order_by}', tuple(f'%{query}%' for _ in range(3)))
         
-        quotes = [i[1:] for i in quotes]
         return quotes
         
 qm = QuoteManager()

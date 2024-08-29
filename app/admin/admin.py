@@ -29,14 +29,14 @@ def before():
         return
     return abort(401)
 
-
 @blueprint.route("/")
 def portal():
     user = User(**session["user"])
     plevel = user.plevel
     vals = {}
-    if plevel == 1:
+    if plevel > 0:
         vals["reports"] = db.query("SELECT * FROM reports")
+        logger.info(vals["reports"])
     if plevel > 1:
         vals["recent_logins"] = db.query("SELECT * FROM logs WHERE action = 'login' ORDER BY id DESC LIMIT 10")
     if plevel > 2:

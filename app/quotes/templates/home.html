@@ -23,6 +23,7 @@
         <input type="submit" value="unlike">
     </form>
     {% endif %}
+    <button onclick="location.href = '{{url_for('quotes.report', quote=random_quote[0])}}'">Report Quote</button>
 </div>
 <h3>Quote of the Day</h3>
 <div class="row">
@@ -45,6 +46,7 @@
         <input type="submit" value="unlike">
     </form>
     {% endif %}
+    <button onclick="location.href = '{{url_for('quotes.report', quote=qotd[0])}}'">Report Quote</button>
 </div>
 <h3>Best Quote</h3>
 <div class="row">
@@ -67,6 +69,7 @@
         <input type="submit" value="unlike">
     </form>
     {% endif %}
+    <button onclick="location.href = '{{url_for('quotes.report', quote=best_quote[0])}}'">Report Quote</button>
 </div>
 </div>
 {% endblock content %}
