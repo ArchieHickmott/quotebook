@@ -17,10 +17,17 @@ class Register(FlaskForm):
             raise ValidationError("name must contain alphabetical characters only")
     
     def validate_email(form: FlaskForm, email: StringField):
-        results = db.query("SELECT * FROM users WHERE email = ?", (email.data,))
+        email = email.data
+        results = db.query("SELECT * FROM users WHERE email = ?", (email,))
         if len(results) > 0:
-            raise ValidationError("email already exists")           
-
+            raise ValidationError("email already exists")
+        try:
+            int(email[0])
+            int(email[1])
+            if email[:10] != "stpatricks.qld.edu.au": raise Exception()
+        except:
+            raise ValidationError("email must be a student email")
+        
 class Login(FlaskForm):
     email = EmailField("email")
     password = PasswordField("password")
@@ -31,11 +38,16 @@ class Login(FlaskForm):
 def home():
     return redirect(url_for("accounts.account"))
 
+@blueprint.route("/logout")
+def logout():
+    session.pop("user")
+    return redirect(url_for("landing"))
+
 @blueprint.route("/account")
 @login_required
 def account():
     user = User(**session["user"])
-    liked_quotes = db.query(f"SELECT author, year, quote, likes FROM quotes WHERE id in (SELECT quote_id FROM likes WHERE user_id={user.id})")
+    liked_quotes = db.query(f"SELECT id, author, year, quote, likes FROM quotes WHERE id in (SELECT quote_id FROM likes WHERE user_id={user.id})")
     return render_template("account_page.html", plevel=user.plevel, name=user.name, email=user.email, likes=liked_quotes)
 
 @blueprint.route('/login', methods=["GET", "POST"])

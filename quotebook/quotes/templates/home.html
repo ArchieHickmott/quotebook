@@ -3,7 +3,7 @@
 <div style="font-size: larger;">
 <h3>Random Quote</h3>
 <a href="{{url_for('quotes.home')}}">next quote</a>
-<div class="row">
+<div class="row" onclick="location.href = '/quotes/{{random_quote[0]}}'">
     <div class="col-sm-12">
     {{random_quote[3]}}
     </div>
@@ -27,7 +27,7 @@
 </div>
 <h3>Quote of the Day</h3>
 <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-12" onclick="location.href = '/quotes/{{qotd[0]}}'">
     {{ qotd[3] }}
     </div>
 </div>
@@ -50,7 +50,7 @@
 </div>
 <h3>Best Quote</h3>
 <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-12" onclick="location.href = '/quotes/{{best_quote[0]}}'">
     {{ best_quote[3] }}
     </div>
 </div>

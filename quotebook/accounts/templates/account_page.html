@@ -1,4 +1,4 @@
-{% from "_utils.html" import render_table %}
+{% from "_utils.html" import render_quotes %}
 {% extends "template.html" %}
 {% block content %}
 <div class="row">
@@ -18,6 +18,6 @@
 </div>
 <div class="row">
     <h4>Liked Quotes</h4>
-    {{render_table(likes, "table-striped", ["name", "year", "quote", "likes"])}}
+    {{render_quotes(likes)}}
 </div>
 {% endblock content %}

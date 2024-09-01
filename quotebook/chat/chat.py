@@ -9,6 +9,8 @@ socket = SocketIO()
 def handle_send_message(data):
     room = data['room']
     message = data['message']
+    with open('chat.log', 'a', errors='ignore') as file:
+        file.write(message + "\n")
     emit('receive_message', message, room=room)
 
 @socket.on('join')

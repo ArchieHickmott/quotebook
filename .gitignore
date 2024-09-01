@@ -6,3 +6,5 @@ env.py
 /.venv
 /.vscode
 /logs.log
+app.jsonl
+chat.log

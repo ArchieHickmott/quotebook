@@ -84,7 +84,12 @@ def search():
         if order == "name": order = "author"
     else:
         order = None
-    quotes = qm.search(query, field, order)
+    if "user" in session:
+        user = session["user"]
+        user = User(**user)
+        quotes = qm.search(query, field, order, user.id)
+    else:
+        quotes = qm.search(query, field, order)
     return render_template("search.html", quotes=quotes)
 
 @blueprint.route("/submit", methods=["GET", "POST"])
