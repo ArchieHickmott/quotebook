@@ -1,6 +1,24 @@
 {% from "_utils.html" import render_table %}
 {% extends "admin.html" %}
+{% block head %}
+<style>
+#report:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock head %}
 {% block content %}
 <h2>Reported Quotes</h2>
-{{render_table(reports, "table table-striped", ["report id", "user id", "quote id", "reason", "details", "status"])}}
+<table class="table table-striped">
+{% for header in ["id", "user id", "quote id", "reason", "details", "status"] %}
+    <th>{{header}}</th> 
+{% endfor %}
+{% for row in reports %}
+<tr id="report" onclick="location.href='/admin/reports/{{row[0]}}'">
+    {% for data in row %}
+    <td>{{data}}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
 {% endblock content %}

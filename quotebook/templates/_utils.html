@@ -26,12 +26,20 @@
         {% for data in quote[1:5] %}
             <td>{{data}}</td>
         {% endfor %}
+        <td>
         {% if quote[5] == 2 %}
             <form method="POST">
                 <input type="hidden" value="{{quote[0]}}" name="unlike">
                 <input type="submit" value="unlike">
             </form>
         {% endif %}
+        {% if quote[5] == 1 %}
+            <form method="POST">
+                <input type="hidden" value="{{quote[0]}}" name="like">
+                <input type="submit" value="like">
+            </form>
+        {% endif %}
+        </td>
         </tr>
     {% endfor %}
 </table>

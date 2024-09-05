@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS reports;
 DROP TABLE IF EXISTS logs;
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS bans;
 
 
 -- Create the tables in the database
@@ -51,7 +52,12 @@ CREATE TABLE `likes` (
 );
 
 CREATE TABLE `comments` (
-`user_id` INTEGE REFERENCES users(id),
+`user_id` INTEGER REFERENCES users(id),
 `quote_id` INTEGER REFERENCES quotes (id),
 `comment` TEXT
 );
+
+CREATE TABLE `bans` {
+`user_id` INTEGER UNIQUE REFERENCES users(id),
+`reason` TEXT
+}

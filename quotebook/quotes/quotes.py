@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, RecaptchaField
 from wtforms.fields import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
 import random
@@ -17,6 +17,7 @@ class Submit(FlaskForm):
     author = StringField("name", [DataRequired()], render_kw={"placeholder": "name"})
     year = StringField("year", [DataRequired()], render_kw={"placeholder": "year"})
     quote = StringField("quote", [DataRequired()], render_kw={"placeholder": "quote"})
+    recaptcha = RecaptchaField()
     submit = SubmitField("Submit Quote")
 
 class Report(FlaskForm):
@@ -28,10 +29,12 @@ class Report(FlaskForm):
                                   ("not a quote", "not a quote"),
                                   ("other", "other")])
     details = StringField("details")
+    recaptcha = RecaptchaField()
     submit = SubmitField("submit a report")
     
 class Comment(FlaskForm):
     comment = StringField(validators=[DataRequired()], render_kw={"placeholder":"Comment"})
+    recaptcha = RecaptchaField()
     submit = SubmitField("Comment")
 
 @blueprint.before_request
@@ -62,8 +65,11 @@ def home():
 
 @blueprint.route("/all", methods=["GET", "POST"])
 def all():
-    quotes = qm.search("", order_by="likes DESC")
-    print(quotes[0][1:5])
+    if "user" in session:
+        user = User(**session["user"])
+        quotes = qm.search("", order_by="likes DESC", userid=user.id)
+    else:
+        quotes = qm.search("", order_by="likes DESC")
     return render_template("all.html", quotes=quotes)
 
 @blueprint.route("/search", methods=["GET", "POST"])
@@ -101,6 +107,12 @@ def submit():
         fields = (form.author, form.year, form.quote)
         qm.create_quote(*(field.data for field in fields))
         quotes = qm.search("", order_by="id DESC")
+        if "user" in session:
+            user = session["user"]
+            user = User(**user)
+            quotes = qm.search("", order_by="id DESC", userid=user.id)
+        else:
+            quotes = qm.search("", order_by="id DESC")
         for field in fields:
             setattr(field, "data", None)
     return render_template("submit.html", form=form, quotes=quotes)

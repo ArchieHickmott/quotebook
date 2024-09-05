@@ -27,6 +27,7 @@ class User:
     style: str
     plevel: int
     is_logged_in: bool = False
+    active: bool = True
     
     def log_in(self, password) -> bool:
         is_logged_in = check_password_hash(self.hash, password)
@@ -36,6 +37,12 @@ class User:
             logger.info(f"\x1b[33mfailed user {self.id} log in\x1b[0m", extra={"userid": self.id, "action":"failed login"})
         object.__setattr__(self, "is_logged_in", is_logged_in)
         return self.is_logged_in
+    
+    def check_banned(self):
+        if db.query(f"SELECT * FROM bans WHERE user_id = {self.id}"):
+            object.__setattr__(self, "active", False)
+        else:
+            object.__setattr__(self, "active", True)        
 
 class UserManager:
     def __init__(self):
@@ -57,7 +64,10 @@ class UserManager:
             user = self.db.query('SELECT * FROM users WHERE email = ?', (email,))[0]
         user = list(user)
         user[3] = str(user[3])
-        return User(*user)
+        user = User(*user)
+        if db.query(f"SELECT * FROM bans WHERE user_id = {user.id}"):
+            object.__setattr__(user, "active", False)
+        return user
 
     def create_user(self, name: str, email: str, password_hash: str, style: str):
         '''

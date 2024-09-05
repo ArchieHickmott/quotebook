@@ -1,6 +1,6 @@
 debug = true
 host = '0.0.0.0'
 port = 8000
-public_endpoints = ["accounts.login", "accounts.register", "landing"]
+public_endpoints = ["accounts.login", "accounts.register", "landing", "privacy", "terms"]
 # secret_key = 
 # session_time = 

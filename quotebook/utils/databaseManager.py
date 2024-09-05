@@ -69,7 +69,7 @@ class DatabaseManager:
                 cursor.execute(query, values)
                 return cursor.fetchall()
             except Exception as e:
-                logger.error(f"{type(e)} error in database {e.__dict__.get("msg")}")
+                logger.error(f"{type(e)} error in database {e.__dict__.get('msg')}")
                 return e
         
     def execute(self, 
