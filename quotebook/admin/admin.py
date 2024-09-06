@@ -115,6 +115,14 @@ def user_info(id: int):
         form.submit.label.text = "Un-ban"
     return render_template("user_info.html", plevel=plevel, user=user, user_logs=logs, form=form)
 
+@blueprint.route("/users/<int:id>/delete")
+def delete_user(id: int):
+    admin = User(**session["user"])
+    plevel = admin.plevel
+    if plevel > 2:
+        um.delete_user(id)
+    return redirect(f"/admin/users/{id}")
+
 @blueprint.route("/quotes", methods=["GET", "POST"])
 def quotes():
     user = User(**session["user"])

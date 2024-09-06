@@ -1,3 +1,3 @@
-from quotebook import main 
+from quotebook import create_app 
 
-main(config_path="config.toml")
+socketio, app = create_app(config_path="config.toml")
