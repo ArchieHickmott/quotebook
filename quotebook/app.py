@@ -18,7 +18,7 @@ from .utils import logger
 from .config import load_config
 
 class App:
-    config: dict | None = None
+    config: dict = dict()
 
     def __new__(self) -> Tuple[SocketIO, Flask]:
         if not self.config:
