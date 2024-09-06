@@ -29,8 +29,8 @@ CREATE TABLE `quotes` (
 
 CREATE TABLE `reports` (
 `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`user_id` INTEGER REFERENCES users (id),
-`quote_id` INTEGER REFERENCES quotes (id),
+`user_id` INTEGER REFERENCES users (id) ON DELETE CASCADE,
+`quote_id` INTEGER REFERENCES quotes (id) ON DELETE CASCADE,
 `reason` TEXT NOT NULL,
 `details` TEXT,
 `status` INTEGER
@@ -38,7 +38,7 @@ CREATE TABLE `reports` (
 
 CREATE TABLE `logs` (
 `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`user_id` INTEGER REFERENCES users (id),
+`user_id` INTEGER REFERENCES users (id) ON DELETE CASCADE,
 `action` TEXT,
 `message` TEXT,
 `time` TEXT,
@@ -47,17 +47,17 @@ CREATE TABLE `logs` (
 );
 
 CREATE TABLE `likes` (
-`user_id` INTEGER REFERENCES users (id),
-`quote_id` INTEGER REFERENCES quotes (id)
+`user_id` INTEGER REFERENCES users (id) ON DELETE CASCADE,
+`quote_id` INTEGER REFERENCES quotes (id) ON DELETE CASCADE
 );
 
 CREATE TABLE `comments` (
-`user_id` INTEGER REFERENCES users(id),
-`quote_id` INTEGER REFERENCES quotes (id),
+`user_id` INTEGER REFERENCES users(id) ON DELETE CASCADE,
+`quote_id` INTEGER REFERENCES quotes (id) ON DELETE CASCADE,
 `comment` TEXT
 );
 
-CREATE TABLE `bans` {
-`user_id` INTEGER UNIQUE REFERENCES users(id),
+CREATE TABLE `bans` (
+`user_id` INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
 `reason` TEXT
-}
+)
