@@ -15,5 +15,7 @@ def create_app(host:str=None, port:int=None, debug:bool|None=None, config_path:s
         debug = debug or App.config["debug"]
     else:
         App.config["secret_key"] = os.urandom(128)
+        App.config["session_time"] = 3600
+        App.config["public_endpoints"] = ["accounts.login", "accounts.register", "landing", "privacy", "terms"]
     socket, flask_app = App()
     return socket, flask_app
