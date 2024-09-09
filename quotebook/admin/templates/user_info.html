@@ -1,0 +1,23 @@
+{% from "bootstrap5/form.html" import render_form %}
+{% from "_utils.html" import render_table %}
+{% extends "admin.html" %}
+{% block content %}
+<h2>User: {{user.name}}</h2>
+<h3>Info</h3>
+<ol>
+<li><b>User Id:          </b>{{user.id}}</li>
+<li><b>Name:             </b>{{user.name}}</li>
+<li><b>Email:            </b>{{user.email}}</li>
+<li><b>Permission Level: </b>{{user.plevel}}</li>
+<li><b>Account Active:   </b>{{user.active}}</li>
+</ol>
+<h3>Ban Hammer</h3>
+{% if user.active %}
+Ban User:
+{% else %}
+Un-Ban User:
+{% endif %}
+{{render_form(form)}}
+<h3>Security Events</h3>
+{{render_table(user_logs)}}
+{% endblock content %}

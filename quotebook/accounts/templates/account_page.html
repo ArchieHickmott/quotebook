@@ -1,0 +1,23 @@
+{% from "_utils.html" import render_quotes %}
+{% extends "template.html" %}
+{% block content %}
+<div class="row">
+    <h2>My Account</h2>
+</div>
+<div class="row">
+    <h4>Welcome {{name}}</h4>
+    {% if plevel > 0 %}
+    <a href="{{url_for('admin.portal')}}">Admin Portal</a>
+    {% endif %}
+</div>
+<div class="row">
+<ul>
+    <li><b>Name:</b> {{name}}</li>
+    <li><b>Email:</b> {{email}}</li>
+</ul>
+</div>
+<div class="row">
+    <h4>Liked Quotes</h4>
+    {{render_quotes(likes)}}
+</div>
+{% endblock content %}
