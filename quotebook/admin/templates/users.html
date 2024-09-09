@@ -1,0 +1,24 @@
+{% from "_utils.html" import render_table %}
+{% extends "admin.html" %}
+{% block head %}
+<style>
+#user:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock head %}
+{% block content %}
+<h2>Users</h2>
+<table class="table table-striped">
+{% for header in ["id", "name", "email", "created at", "style", "permission level"] %}
+    <th>{{header}}</th>
+{% endfor %}
+{% for row in users%}
+<tr id="user" onclick="location.href='/admin/users/{{row[0]}}'">
+    {% for data in row %}
+    <td>{{data}}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
+{% endblock content %}

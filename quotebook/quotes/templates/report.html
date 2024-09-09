@@ -1,0 +1,18 @@
+{% from "bootstrap5/form.html" import render_form %}
+{% extends "template.html" %}
+{% block content %}
+<h3>{{extra}}</h3>
+<div class="row">
+    <div class="col-sm-12">
+    "{{quote[2]}}"
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-11"><b> - {{quote[0]}}, {{quote[1]}}</b></div>
+</div>
+<form method="POST">
+    {{form.crsf_token}}
+    {{render_form(form, button_map = {"submit": "warning"})}}
+</form>
+{% endblock content %}

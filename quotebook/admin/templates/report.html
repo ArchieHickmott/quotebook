@@ -1,0 +1,35 @@
+{% from 'bootstrap5/form.html' import render_form %}
+{% from '_utils.html' import render_table %}
+{% extends "admin.html" %}
+{% block content %}
+<h2>Report {{id}}</h2>
+<ol>
+<li><b>Report Id: </b>{{report[0]}}</li>
+<li><b>Reporter Id: </b>{{report[1]}}</li>
+<li><b>Reported Quote Id: </b>{{report[2]}}</li>
+<li><b>Reason: </b>{{report[3]}}</li>
+<li><b>Details: </b>{{report[4]}}</li>
+<li><b>Status: </b>
+{% if report[5] == 0 %}
+No Action Taken
+{% else %}
+Action Taken
+{% endif %}
+</li>
+</ol>
+<h3>Quote</h3>
+<div class="row">
+    <div class="col-sm-12">
+    {{quote[3]}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-11"><b> - {{ quote[1] }}, {{ quote[2] }}</b>
+</div>
+<h3>Edit Quote</h2>
+<h4>Update Quote</h3>
+{{render_form(update_form)}}
+<h4>Delete Quote</h3>
+{{render_form(delete_form)}}
+{% endblock content %}

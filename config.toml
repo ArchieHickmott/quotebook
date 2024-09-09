@@ -1,0 +1,6 @@
+debug = false
+host = '127.0.0.1'
+port = 5000
+public_endpoints = ["accounts.login", "accounts.register", "landing", "privacy", "terms"]
+# secret_key = 
+# session_time = 
