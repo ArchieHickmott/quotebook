@@ -2,6 +2,7 @@ from .databaseManager import db
 from datetime import datetime
 from datetime import datetime
 import random
+import sqlite3
 
 '''
 Database structure is as follows:
@@ -18,7 +19,7 @@ class QuoteManager:
     def __init__(self):
         self.db = db
         quotes = db.query("SELECT id FROM quotes")
-        if isinstance(quotes, Exception):
+        if isinstance(quotes, sqlite3.OperationalError):
             raise quotes
         for quote in quotes:
             self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote[0]}) WHERE id={quote[0]}")
