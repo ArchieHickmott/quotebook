@@ -110,6 +110,8 @@ class App:
                 msg = error_codes[e.code]
                 return render_template("error.html", message=msg)
             logger.error(f"{type(e).__name__} in app")
-            return render_template("error.html", message=msg)
+            if flask_app.debug:
+                return render_template("error.html", message=msg)
+            raise e
         
         return socket, flask_app
