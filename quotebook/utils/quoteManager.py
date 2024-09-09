@@ -18,6 +18,8 @@ class QuoteManager:
     def __init__(self):
         self.db = db
         quotes = db.query("SELECT id FROM quotes")
+        if isinstance(quotes, Exception):
+            raise quotes
         for quote in quotes:
             self.db.query(f"UPDATE quotes SET likes = (SELECT count(quote_id) FROM likes WHERE quote_id={quote[0]}) WHERE id={quote[0]}")
     
