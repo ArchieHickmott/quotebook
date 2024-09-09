@@ -10,6 +10,7 @@ from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap5
 from jinja2 import Template
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Local
 from .utils import User, um, db
@@ -29,6 +30,10 @@ class App:
         flask_app.config["RECAPTCHA_PUBLIC_KEY"] = "6LeBKyQqAAAAAMwRSIkHrPhDnACK6_aj3YO1sA2C"
         flask_app.config["SECRET_KEY"] = self.config["secret_key"]
         bootstrap = Bootstrap5(flask_app)
+        
+        flask_app.wsgi_app = ProxyFix( # used to fix errors when running NGINX with werkzueg
+            flask_app.wsgi_app
+        )
 
         # Blueprints
         from .accounts import blueprint as account
@@ -40,7 +45,7 @@ class App:
         flask_app.register_blueprint(admin)
         flask_app.register_blueprint(quotes)
         flask_app.register_blueprint(chat)
-        socket.init_app(flask_app)
+        socket.init_app(flask_app, cors_allowed_origins="*")
 
         @flask_app.before_request
         def before():

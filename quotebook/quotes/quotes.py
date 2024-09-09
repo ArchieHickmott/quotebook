@@ -44,7 +44,7 @@ def before():
         qm.like_quote(user.id, int(request.form["like"]))
     elif "unlike" in request.form and "user" in session:
         user = User(**session["user"])
-        qm.unlike_quote(user.id, int(request.form["unlike"]))
+        qm.unlike_quote(user.id, int(request.form["unlike"]))        
 
 @blueprint.route("/", methods=["GET", "POST"])
 def index():
